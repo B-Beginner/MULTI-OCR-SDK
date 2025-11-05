@@ -73,7 +73,7 @@ text = client.parse("document.pdf")
 print(text)
 ```
 
-**Note**: This SDK supports any OpenAI-compatible API endpoint that provides the DeepSeek-OCR model. Common providers include SiliconFlow, DeepSeek Official API, and others. Please check your provider's documentation for the correct `base_url`.
+**Note**: This SDK supports any OpenAI-compatible API endpoint that provides the DeepSeek-OCR model. Currently known provider: **SiliconFlow** (`api.siliconflow.cn`). DeepSeek's official API does not support the DeepSeek-OCR model.
 
 ### Architecture
 
@@ -197,9 +197,10 @@ export DS_OCR_MIN_OUTPUT_THRESHOLD=500
 ```
 
 **Available API Providers**:
-- **SiliconFlow**: `https://api.siliconflow.cn/v1/chat/completions`
-- **DeepSeek Official**: `https://api.deepseek.com/v1/chat/completions`
-- **Others**: Check your provider's documentation
+- **SiliconFlow**: `https://api.siliconflow.cn/v1/chat/completions` (Verified ✅)
+- **Others**: Contact third-party API providers for DeepSeek-OCR support
+
+**Note**: DeepSeek's official API (`api.deepseek.com`) does not support the DeepSeek-OCR model.
 
 #### Programmatic Configuration
 
@@ -363,7 +364,7 @@ text = client.parse("document.pdf")
 print(text)
 ```
 
-**注意**：本 SDK 支持任何提供 DeepSeek-OCR 模型的 OpenAI 兼容 API 端点。常见提供商包括硅基流动、DeepSeek 官方 API 等。请查看您的提供商文档以获取正确的 `base_url`。
+**注意**：本 SDK 支持任何提供 DeepSeek-OCR 模型的 OpenAI 兼容 API 端点。目前已知的提供商：**硅基流动** (`api.siliconflow.cn`)。DeepSeek 官方 API 不支持 DeepSeek-OCR 模型。
 
 ### 架构图
 
@@ -487,9 +488,10 @@ export DS_OCR_MIN_OUTPUT_THRESHOLD=500
 ```
 
 **可用的 API 提供商**：
-- **硅基流动（SiliconFlow）**：`https://api.siliconflow.cn/v1/chat/completions`
-- **DeepSeek 官方**：`https://api.deepseek.com/v1/chat/completions`
-- **其他**：请查看您的提供商文档
+- **硅基流动（SiliconFlow）**：`https://api.siliconflow.cn/v1/chat/completions` (已验证 ✅)
+- **其他**：联系第三方 API 提供商以获取 DeepSeek-OCR 支持
+
+**注意**：DeepSeek 官方 API (`api.deepseek.com`) 不支持 DeepSeek-OCR 模型。
 
 #### 编程式配置
 

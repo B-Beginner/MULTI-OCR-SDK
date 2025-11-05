@@ -70,10 +70,9 @@ class OCRConfig:
             raise ConfigurationError(
                 "Base URL is required. Set DS_OCR_BASE_URL environment variable "
                 "or pass base_url parameter. "
-                "Common providers:\n"
+                "Known provider:\n"
                 "  - SiliconFlow: https://api.siliconflow.cn/v1/chat/completions\n"
-                "  - DeepSeek Official: https://api.deepseek.com/v1/chat/completions\n"
-                "Check your API provider's documentation for the correct endpoint."
+                "Note: DeepSeek's official API does not support the DeepSeek-OCR model."
             )
 
         if self.dpi not in [150, 200, 300]:
