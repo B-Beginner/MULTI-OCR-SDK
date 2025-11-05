@@ -47,13 +47,18 @@ pip install deepseek-ocr
 ```python
 from deepseek_ocr import DeepSeekOCR
 
-# Initialize client
-client = DeepSeekOCR(api_key="your_api_key")
+# Initialize client (choose your API provider)
+client = DeepSeekOCR(
+    api_key="your_api_key",
+    base_url="https://api.siliconflow.cn/v1/chat/completions"  # or your provider's endpoint
+)
 
 # Parse document
 text = client.parse("document.pdf")
 print(text)
 ```
+
+**Note**: This SDK supports any OpenAI-compatible API endpoint that provides the DeepSeek-OCR model. Common providers include SiliconFlow, DeepSeek Official API, and others. Please check your provider's documentation for the correct `base_url`.
 
 ### Architecture
 
@@ -93,7 +98,10 @@ flowchart TD
 ```python
 from deepseek_ocr import DeepSeekOCR
 
-client = DeepSeekOCR(api_key="your_api_key")
+client = DeepSeekOCR(
+    api_key="your_api_key",
+    base_url="https://api.siliconflow.cn/v1/chat/completions"  # or your provider's endpoint
+)
 
 # Simple document
 text = client.parse("invoice.pdf", mode="free_ocr")
@@ -115,7 +123,10 @@ import asyncio
 from deepseek_ocr import DeepSeekOCR
 
 async def main():
-    client = DeepSeekOCR(api_key="your_api_key")
+    client = DeepSeekOCR(
+        api_key="your_api_key",
+        base_url="https://api.siliconflow.cn/v1/chat/completions"  # or your provider's endpoint
+    )
     text = await client.parse_async("document.pdf")
     print(text)
 
@@ -130,7 +141,10 @@ from pathlib import Path
 from deepseek_ocr import DeepSeekOCR, BatchProcessor
 
 async def batch_example():
-    client = DeepSeekOCR(api_key="your_api_key")
+    client = DeepSeekOCR(
+        api_key="your_api_key",
+        base_url="https://api.siliconflow.cn/v1/chat/completions"  # or your provider's endpoint
+    )
     processor = BatchProcessor(client, max_concurrent=5)
 
     files = list(Path("docs").glob("*.pdf"))
@@ -161,7 +175,7 @@ asyncio.run(batch_example())
 
 ```bash
 export DS_OCR_API_KEY="your_api_key"
-export DS_OCR_BASE_URL="https://api.siliconflow.cn/v1/chat/completions"
+export DS_OCR_BASE_URL="https://api.siliconflow.cn/v1/chat/completions"  # REQUIRED: Set to your provider's endpoint
 export DS_OCR_MODEL="deepseek-ai/DeepSeek-OCR"
 export DS_OCR_TIMEOUT=60
 export DS_OCR_MAX_TOKENS=4000
@@ -171,6 +185,11 @@ export DS_OCR_FALLBACK_MODE="grounding"
 export DS_OCR_MIN_OUTPUT_THRESHOLD=500
 ```
 
+**Available API Providers**:
+- **SiliconFlow**: `https://api.siliconflow.cn/v1/chat/completions`
+- **DeepSeek Official**: `https://api.deepseek.com/v1/chat/completions`
+- **Others**: Check your provider's documentation
+
 #### Programmatic Configuration
 
 ```python
@@ -179,14 +198,14 @@ from deepseek_ocr import DeepSeekOCR, OCRConfig
 # Method 1: Direct initialization
 client = DeepSeekOCR(
     api_key="your_api_key",
-    base_url="https://api.siliconflow.cn/v1/chat/completions",
+    base_url="https://api.siliconflow.cn/v1/chat/completions",  # or your provider's endpoint
     timeout=120,
     dpi=300
 )
 
-# Method 2: Using config object
+# Method 2: Using config object (requires DS_OCR_BASE_URL environment variable)
 config = OCRConfig.from_env(api_key="your_api_key", dpi=300)
-client = DeepSeekOCR(api_key=config.api_key)
+client = DeepSeekOCR(api_key=config.api_key, base_url=config.base_url)
 ```
 
 ### DPI Recommendations
@@ -200,7 +219,10 @@ client = DeepSeekOCR(api_key=config.api_key)
 ```python
 from deepseek_ocr import DeepSeekOCR, APIError, FileProcessingError
 
-client = DeepSeekOCR(api_key="your_api_key")
+client = DeepSeekOCR(
+    api_key="your_api_key",
+    base_url="https://api.siliconflow.cn/v1/chat/completions"  # or your provider's endpoint
+)
 
 try:
     text = client.parse("document.pdf")
@@ -268,8 +290,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Acknowledgments
 
-- DeepSeek AI for the excellent OCR API
-- SiliconFlow for providing API access
+- DeepSeek AI for the excellent OCR model
+
+**Disclaimer**: This is an unofficial, third-party SDK and is not affiliated with DeepSeek AI or any API service provider. Users are responsible for choosing their own API provider and complying with the provider's terms of service.
 
 ---
 
@@ -312,13 +335,18 @@ pip install deepseek-ocr
 ```python
 from deepseek_ocr import DeepSeekOCR
 
-# 初始化客户端
-client = DeepSeekOCR(api_key="your_api_key")
+# 初始化客户端（选择您的 API 提供商）
+client = DeepSeekOCR(
+    api_key="your_api_key",
+    base_url="https://api.siliconflow.cn/v1/chat/completions"  # 或您的提供商端点
+)
 
 # 解析文档
 text = client.parse("document.pdf")
 print(text)
 ```
+
+**注意**：本 SDK 支持任何提供 DeepSeek-OCR 模型的 OpenAI 兼容 API 端点。常见提供商包括硅基流动、DeepSeek 官方 API 等。请查看您的提供商文档以获取正确的 `base_url`。
 
 ### 架构图
 
@@ -358,7 +386,10 @@ flowchart TD
 ```python
 from deepseek_ocr import DeepSeekOCR
 
-client = DeepSeekOCR(api_key="your_api_key")
+client = DeepSeekOCR(
+    api_key="your_api_key",
+    base_url="https://api.siliconflow.cn/v1/chat/completions"  # 或您的提供商端点
+)
 
 # 简单文档
 text = client.parse("invoice.pdf", mode="free_ocr")
@@ -380,7 +411,10 @@ import asyncio
 from deepseek_ocr import DeepSeekOCR
 
 async def main():
-    client = DeepSeekOCR(api_key="your_api_key")
+    client = DeepSeekOCR(
+        api_key="your_api_key",
+        base_url="https://api.siliconflow.cn/v1/chat/completions"  # 或您的提供商端点
+    )
     text = await client.parse_async("document.pdf")
     print(text)
 
@@ -395,7 +429,10 @@ from pathlib import Path
 from deepseek_ocr import DeepSeekOCR, BatchProcessor
 
 async def batch_example():
-    client = DeepSeekOCR(api_key="your_api_key")
+    client = DeepSeekOCR(
+        api_key="your_api_key",
+        base_url="https://api.siliconflow.cn/v1/chat/completions"  # 或您的提供商端点
+    )
     processor = BatchProcessor(client, max_concurrent=5)
 
     files = list(Path("docs").glob("*.pdf"))
@@ -426,7 +463,7 @@ asyncio.run(batch_example())
 
 ```bash
 export DS_OCR_API_KEY="your_api_key"
-export DS_OCR_BASE_URL="https://api.siliconflow.cn/v1/chat/completions"
+export DS_OCR_BASE_URL="https://api.siliconflow.cn/v1/chat/completions"  # 必填：设置为您的提供商端点
 export DS_OCR_MODEL="deepseek-ai/DeepSeek-OCR"
 export DS_OCR_TIMEOUT=60
 export DS_OCR_MAX_TOKENS=4000
@@ -436,6 +473,11 @@ export DS_OCR_FALLBACK_MODE="grounding"
 export DS_OCR_MIN_OUTPUT_THRESHOLD=500
 ```
 
+**可用的 API 提供商**：
+- **硅基流动（SiliconFlow）**：`https://api.siliconflow.cn/v1/chat/completions`
+- **DeepSeek 官方**：`https://api.deepseek.com/v1/chat/completions`
+- **其他**：请查看您的提供商文档
+
 #### 编程式配置
 
 ```python
@@ -444,14 +486,14 @@ from deepseek_ocr import DeepSeekOCR, OCRConfig
 # 方法 1：直接初始化
 client = DeepSeekOCR(
     api_key="your_api_key",
-    base_url="https://api.siliconflow.cn/v1/chat/completions",
+    base_url="https://api.siliconflow.cn/v1/chat/completions",  # 或您的提供商端点
     timeout=120,
     dpi=300
 )
 
-# 方法 2：使用配置对象
+# 方法 2：使用配置对象（需要设置 DS_OCR_BASE_URL 环境变量）
 config = OCRConfig.from_env(api_key="your_api_key", dpi=300)
-client = DeepSeekOCR(api_key=config.api_key)
+client = DeepSeekOCR(api_key=config.api_key, base_url=config.base_url)
 ```
 
 ### DPI 推荐
@@ -465,7 +507,10 @@ client = DeepSeekOCR(api_key=config.api_key)
 ```python
 from deepseek_ocr import DeepSeekOCR, APIError, FileProcessingError
 
-client = DeepSeekOCR(api_key="your_api_key")
+client = DeepSeekOCR(
+    api_key="your_api_key",
+    base_url="https://api.siliconflow.cn/v1/chat/completions"  # 或您的提供商端点
+)
 
 try:
     text = client.parse("document.pdf")
@@ -533,5 +578,6 @@ uv run flake8 deepseek_ocr/
 
 ### 致谢
 
-- DeepSeek AI 提供的优秀 OCR API
-- SiliconFlow 提供的 API 访问
+- DeepSeek AI 提供的优秀 OCR 模型
+
+**免责声明**：这是一个非官方的第三方 SDK，与 DeepSeek AI 或任何 API 服务提供商无关联。用户需自行选择 API 提供商并遵守提供商的服务条款。

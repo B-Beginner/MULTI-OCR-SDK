@@ -1,9 +1,9 @@
 """Tests for exceptions module."""
-import pytest
+
 from deepseek_ocr import (
-    DeepSeekOCRError,
-    ConfigurationError,
     APIError,
+    ConfigurationError,
+    DeepSeekOCRError,
     FileProcessingError,
     TimeoutError,
 )

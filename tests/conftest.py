@@ -1,5 +1,7 @@
 """Pytest configuration and fixtures."""
+
 import pytest
+
 from deepseek_ocr import DeepSeekOCR, OCRConfig
 
 

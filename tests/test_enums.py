@@ -1,4 +1,5 @@
 """Tests for enums module."""
+
 from deepseek_ocr import OCRMode
 
 

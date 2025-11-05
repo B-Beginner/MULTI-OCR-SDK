@@ -48,7 +48,7 @@ class OCRConfig:
     """
 
     api_key: str
-    base_url: str = "https://api.siliconflow.cn/v1/chat/completions"
+    base_url: str
     model_name: str = "deepseek-ai/DeepSeek-OCR"
     timeout: int = 60
     max_tokens: int = 4000
@@ -64,6 +64,16 @@ class OCRConfig:
             raise ConfigurationError(
                 "API key is required. Set DS_OCR_API_KEY environment variable "
                 "or pass api_key parameter."
+            )
+
+        if not self.base_url:
+            raise ConfigurationError(
+                "Base URL is required. Set DS_OCR_BASE_URL environment variable "
+                "or pass base_url parameter. "
+                "Common providers:\n"
+                "  - SiliconFlow: https://api.siliconflow.cn/v1/chat/completions\n"
+                "  - DeepSeek Official: https://api.deepseek.com/v1/chat/completions\n"
+                "Check your API provider's documentation for the correct endpoint."
             )
 
         if self.dpi not in [150, 200, 300]:
@@ -107,10 +117,7 @@ class OCRConfig:
         api_key = cast(str, overrides.get("api_key") or os.getenv("DS_OCR_API_KEY", ""))
         base_url = cast(
             str,
-            overrides.get("base_url")
-            or os.getenv(
-                "DS_OCR_BASE_URL", "https://api.siliconflow.cn/v1/chat/completions"
-            ),
+            overrides.get("base_url") or os.getenv("DS_OCR_BASE_URL", ""),
         )
         model_name = cast(
             str,
