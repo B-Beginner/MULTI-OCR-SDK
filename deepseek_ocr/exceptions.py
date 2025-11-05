@@ -20,7 +20,9 @@ class ConfigurationError(DeepSeekOCRError):
 class APIError(DeepSeekOCRError):
     """Raised when the API returns an error response."""
 
-    def __init__(self, message: str, status_code: int = None, response_text: str = None):
+    def __init__(
+        self, message: str, status_code: int = None, response_text: str = None
+    ):
         """
         Initialize APIError.
 

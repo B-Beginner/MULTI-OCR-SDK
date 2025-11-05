@@ -4,17 +4,17 @@ Batch processing utilities for DeepSeek OCR SDK.
 This module provides tools for processing multiple documents efficiently
 with progress tracking and error handling.
 """
+
 import asyncio
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from tqdm import tqdm
 
 from .client import DeepSeekOCR
 from .enums import OCRMode
-from .exceptions import DeepSeekOCRError
 
 logger = logging.getLogger(__name__)
 
@@ -59,14 +59,16 @@ class BatchSummary:
     def print_summary(self) -> None:
         """Print a human-readable summary."""
         print(f"\n{'='*60}")
-        print(f"Batch Processing Summary")
+        print("Batch Processing Summary")
         print(f"{'='*60}")
         print(f"Total documents: {self.total}")
-        print(f"Successful: {self.successful} ({self.successful/self.total*100:.1f}%)")
-        print(f"Failed: {self.failed} ({self.failed/self.total*100:.1f}%)")
+        success_pct = self.successful / self.total * 100
+        fail_pct = self.failed / self.total * 100
+        print(f"Successful: {self.successful} ({success_pct:.1f}%)")
+        print(f"Failed: {self.failed} ({fail_pct:.1f}%)")
 
         if self.failed > 0:
-            print(f"\nFailed documents:")
+            print("\nFailed documents:")
             for result in self.results:
                 if not result.success:
                     print(f"  - {result.file_path.name}: {result.error}")
@@ -134,7 +136,9 @@ class BatchProcessor:
         last_error = None
         for attempt in range(self.retry_count + 1):
             try:
-                text = await self.client.parse_async(file_path, mode=mode, **kwargs)
+                text = await self.client.parse_async(
+                    file_path, mode=mode, **kwargs
+                )
                 return BatchResult(
                     file_path=file_path,
                     success=True,
@@ -195,9 +199,7 @@ class BatchProcessor:
 
         async def process_with_semaphore(file_path: Union[str, Path]) -> BatchResult:
             async with semaphore:
-                return await self._process_single(
-                    file_path, mode=mode, **kwargs
-                )
+                return await self._process_single(file_path, mode=mode, **kwargs)
 
         # Process all files
         if show_progress:

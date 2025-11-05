@@ -3,11 +3,11 @@ Core OCR client for DeepSeek OCR SDK.
 
 This module provides the main client for interacting with the DeepSeek OCR API.
 """
+
 import asyncio
 import base64
 import logging
 import re
-from io import BytesIO
 from pathlib import Path
 from typing import Dict, Optional, Union
 
@@ -90,7 +90,9 @@ class DeepSeekOCR:
         overrides.update(kwargs)
 
         self.config = OCRConfig.from_env(**overrides)
-        logger.info(f"Initialized DeepSeekOCR client with model: {self.config.model_name}")
+        logger.info(
+            f"Initialized DeepSeekOCR client with model: {self.config.model_name}"
+        )
 
     def _pdf_to_base64(self, file_path: Union[str, Path], dpi: int) -> str:
         """
@@ -127,7 +129,9 @@ class DeepSeekOCR:
 
             # Encode to base64
             b64_string = base64.b64encode(img_bytes).decode("utf-8")
-            logger.debug(f"Converted PDF to image: {len(b64_string)} bytes at {dpi} DPI")
+            logger.debug(
+                f"Converted PDF to image: {len(b64_string)} bytes at {dpi} DPI"
+            )
             return b64_string
 
         except Exception as e:
@@ -192,7 +196,10 @@ class DeepSeekOCR:
                 {
                     "role": "user",
                     "content": [
-                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64}"}},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                        },
                         {"type": "text", "text": prompt},
                     ],
                 }
@@ -250,7 +257,10 @@ class DeepSeekOCR:
                 {
                     "role": "user",
                     "content": [
-                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64}"}},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                        },
                         {"type": "text", "text": prompt},
                     ],
                 }

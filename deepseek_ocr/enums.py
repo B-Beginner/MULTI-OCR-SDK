@@ -3,6 +3,7 @@ Enumerations for DeepSeek OCR SDK.
 
 This module defines the enumeration types used throughout the SDK.
 """
+
 from enum import Enum
 
 
