@@ -3,6 +3,7 @@ Custom exceptions for DeepSeek OCR SDK.
 
 This module defines all custom exception types used by the SDK.
 """
+from typing import Optional
 
 
 class DeepSeekOCRError(Exception):

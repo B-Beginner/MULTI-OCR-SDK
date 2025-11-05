@@ -9,7 +9,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from tqdm import tqdm
 
@@ -113,7 +113,7 @@ class BatchProcessor:
         self,
         file_path: Union[str, Path],
         mode: Optional[OCRMode] = None,
-        **kwargs: any,
+        **kwargs: Any,
     ) -> BatchResult:
         """
         Process a single document with retry logic.
@@ -166,7 +166,7 @@ class BatchProcessor:
         file_paths: List[Union[str, Path]],
         mode: Optional[OCRMode] = None,
         show_progress: bool = True,
-        **kwargs: any,
+        **kwargs: Any,
     ) -> BatchSummary:
         """
         Process multiple documents in batch.
@@ -232,7 +232,7 @@ class BatchProcessor:
         file_paths: List[Union[str, Path]],
         mode: Optional[OCRMode] = None,
         show_progress: bool = True,
-        **kwargs: any,
+        **kwargs: Any,
     ) -> BatchSummary:
         """
         Process multiple documents in batch (synchronous wrapper).

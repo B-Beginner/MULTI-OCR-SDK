@@ -9,7 +9,7 @@ import base64
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import aiohttp
 import fitz  # PyMuPDF
@@ -170,7 +170,7 @@ class DeepSeekOCR:
 
     async def _make_api_request_async(
         self, image_b64: str, prompt: str
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Make async API request to DeepSeek OCR.
 
