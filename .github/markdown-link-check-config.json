@@ -11,6 +11,9 @@
     },
     {
       "pattern": "^https://api\\.deepseek\\.com"
+    },
+    {
+      "pattern": "^https://github\\.com/BukeLy/DeepSeek-OCR-SDK/(compare|releases)"
     }
   ],
   "replacementPatterns": [],
