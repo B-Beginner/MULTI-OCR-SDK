@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-01-05
+
+### Changed
+- **BREAKING**: Upgraded minimum Python version from 3.8+ to 3.10+
+- Updated Python version badge in README to 3.10+
+- Reduced CI test matrix from 5 to 3 Python versions (3.10, 3.11, 3.12)
+- Updated black target version to py310
+
+### Fixed
+- Fixed GitHub Actions Documentation workflow Mermaid validation error
+- Added twine to dev dependencies for PyPI publishing
+- Fixed Python 3.8 CI test failures due to twine 6.2.0 incompatibility
+
+### Removed
+- Dropped support for Python 3.8 and 3.9 (EOL or near-EOL)
+
 ## [0.1.0] - 2025-01-05
 
 ### Added
@@ -48,5 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions for CI/CD
 - Type checking with mypy
 
-[Unreleased]: https://github.com/BukeLy/DeepSeek-OCR-SDK/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/BukeLy/DeepSeek-OCR-SDK/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/BukeLy/DeepSeek-OCR-SDK/releases/tag/v0.1.1
 [0.1.0]: https://github.com/BukeLy/DeepSeek-OCR-SDK/releases/tag/v0.1.0
