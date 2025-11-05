@@ -55,7 +55,7 @@ class DeepSeekOCR:
         timeout: Optional[int] = None,
         max_tokens: Optional[int] = None,
         dpi: Optional[int] = None,
-        **kwargs: Optional[str],
+        **kwargs: str,
     ):
         """
         Initialize DeepSeekOCR client.
@@ -223,7 +223,7 @@ class DeepSeekOCR:
                             response_text=error_text,
                         )
 
-                    result = await response.json()
+                    result: Dict[str, Any] = await response.json()
                     return result
 
         except asyncio.TimeoutError as e:
@@ -231,7 +231,7 @@ class DeepSeekOCR:
                 f"Request timed out after {self.config.timeout} seconds"
             ) from e
 
-    def _make_api_request_sync(self, image_b64: str, prompt: str) -> Dict[str, any]:
+    def _make_api_request_sync(self, image_b64: str, prompt: str) -> Dict[str, Any]:
         """
         Make synchronous API request to DeepSeek OCR.
 
@@ -284,7 +284,8 @@ class DeepSeekOCR:
                     response_text=response.text,
                 )
 
-            return response.json()
+            result: Dict[str, Any] = response.json()
+            return result
 
         except requests.Timeout as e:
             raise TimeoutError(

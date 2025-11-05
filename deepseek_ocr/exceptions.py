@@ -3,6 +3,7 @@ Custom exceptions for DeepSeek OCR SDK.
 
 This module defines all custom exception types used by the SDK.
 """
+
 from typing import Optional
 
 
@@ -22,7 +23,10 @@ class APIError(DeepSeekOCRError):
     """Raised when the API returns an error response."""
 
     def __init__(
-        self, message: str, status_code: int = None, response_text: str = None
+        self,
+        message: str,
+        status_code: Optional[int] = None,
+        response_text: Optional[str] = None,
     ):
         """
         Initialize APIError.

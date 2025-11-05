@@ -7,7 +7,7 @@ environment variables and explicit parameters.
 
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from .exceptions import ConfigurationError
 
@@ -104,32 +104,52 @@ class OCRConfig:
             >>> config = OCRConfig.from_env(dpi=300)
             >>> config = OCRConfig.from_env(api_key="custom_key")
         """
-        api_key = overrides.get("api_key") or os.getenv("DS_OCR_API_KEY", "")
-        base_url = overrides.get("base_url") or os.getenv(
-            "DS_OCR_BASE_URL", "https://api.siliconflow.cn/v1/chat/completions"
+        api_key = cast(str, overrides.get("api_key") or os.getenv("DS_OCR_API_KEY", ""))
+        base_url = cast(
+            str,
+            overrides.get("base_url")
+            or os.getenv(
+                "DS_OCR_BASE_URL", "https://api.siliconflow.cn/v1/chat/completions"
+            ),
         )
-        model_name = overrides.get("model_name") or os.getenv(
-            "DS_OCR_MODEL", "deepseek-ai/DeepSeek-OCR"
+        model_name = cast(
+            str,
+            overrides.get("model_name")
+            or os.getenv("DS_OCR_MODEL", "deepseek-ai/DeepSeek-OCR"),
         )
-        timeout = int(overrides.get("timeout") or os.getenv("DS_OCR_TIMEOUT", "60"))
-        max_tokens = int(
-            overrides.get("max_tokens") or os.getenv("DS_OCR_MAX_TOKENS", "4000")
+        timeout_str = cast(
+            str, overrides.get("timeout") or os.getenv("DS_OCR_TIMEOUT", "60")
         )
-        temperature = float(
-            overrides.get("temperature") or os.getenv("DS_OCR_TEMPERATURE", "0.0")
+        timeout = int(timeout_str)
+        max_tokens_str = cast(
+            str,
+            overrides.get("max_tokens") or os.getenv("DS_OCR_MAX_TOKENS", "4000"),
         )
-        dpi = int(overrides.get("dpi") or os.getenv("DS_OCR_DPI", "200"))
-        fallback_enabled = (
+        max_tokens = int(max_tokens_str)
+        temperature_str = cast(
+            str,
+            overrides.get("temperature") or os.getenv("DS_OCR_TEMPERATURE", "0.0"),
+        )
+        temperature = float(temperature_str)
+        dpi_str = cast(str, overrides.get("dpi") or os.getenv("DS_OCR_DPI", "200"))
+        dpi = int(dpi_str)
+        fallback_enabled_str = cast(
+            str,
             overrides.get("fallback_enabled")
-            or os.getenv("DS_OCR_FALLBACK_ENABLED", "true")
-        ).lower() in ("true", "1", "yes")
-        fallback_mode = overrides.get("fallback_mode") or os.getenv(
-            "DS_OCR_FALLBACK_MODE", "grounding"
+            or os.getenv("DS_OCR_FALLBACK_ENABLED", "true"),
         )
-        min_output_threshold = int(
+        fallback_enabled = fallback_enabled_str.lower() in ("true", "1", "yes")
+        fallback_mode = cast(
+            str,
+            overrides.get("fallback_mode")
+            or os.getenv("DS_OCR_FALLBACK_MODE", "grounding"),
+        )
+        min_threshold_str = cast(
+            str,
             overrides.get("min_output_threshold")
-            or os.getenv("DS_OCR_MIN_OUTPUT_THRESHOLD", "500")
+            or os.getenv("DS_OCR_MIN_OUTPUT_THRESHOLD", "500"),
         )
+        min_output_threshold = int(min_threshold_str)
 
         return cls(
             api_key=api_key,
