@@ -1,5 +1,6 @@
 # DeepSeek-OCR-SDK
 
+[![PyPI version](https://img.shields.io/pypi/v/deepseek-ocr.svg)](https://pypi.org/project/deepseek-ocr/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -286,17 +287,9 @@ uv run mypy deepseek_ocr/
 uv run flake8 deepseek_ocr/
 ```
 
-### Performance Benchmarks
-
-See [BENCHMARKS.md](docs/BENCHMARKS.md) for detailed performance comparisons with MinerU and Docling.
-
 ### API Reference
 
 See [API_REFERENCE.md](docs/API_REFERENCE.md) for complete API documentation.
-
-### Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### License
 
@@ -588,17 +581,9 @@ uv run mypy deepseek_ocr/
 uv run flake8 deepseek_ocr/
 ```
 
-### 性能基准
-
-详细的性能对比（与 MinerU、Docling 等）请参见 [BENCHMARKS.md](docs/BENCHMARKS.md)。
-
 ### API 参考
 
 完整的 API 文档请参见 [API_REFERENCE.md](docs/API_REFERENCE.md)。
-
-### 贡献
-
-欢迎贡献！请随时提交 Pull Request。
 
 ### 许可证
 
