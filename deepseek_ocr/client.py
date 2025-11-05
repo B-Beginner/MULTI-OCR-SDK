@@ -303,7 +303,7 @@ class DeepSeekOCR:
 
         Args:
             file_path: Path to PDF or image file.
-            mode: OCR mode to use ("free_ocr", "grounding", "ocr_image" or OCRMode enum).
+            mode: OCR mode ("free_ocr", "grounding", "ocr_image" or enum).
             dpi: DPI for PDF conversion. If None, uses config default.
             chinese_hint: Add Chinese language hint for simple tables.
 
@@ -391,7 +391,7 @@ class DeepSeekOCR:
 
         Args:
             file_path: Path to PDF or image file.
-            mode: OCR mode to use ("free_ocr", "grounding", "ocr_image" or OCRMode enum).
+            mode: OCR mode ("free_ocr", "grounding", "ocr_image" or enum).
             dpi: DPI for PDF conversion. If None, uses config default.
             chinese_hint: Add Chinese language hint for simple tables.
 

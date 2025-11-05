@@ -136,9 +136,7 @@ class BatchProcessor:
         last_error = None
         for attempt in range(self.retry_count + 1):
             try:
-                text = await self.client.parse_async(
-                    file_path, mode=mode, **kwargs
-                )
+                text = await self.client.parse_async(file_path, mode=mode, **kwargs)
                 return BatchResult(
                     file_path=file_path,
                     success=True,
