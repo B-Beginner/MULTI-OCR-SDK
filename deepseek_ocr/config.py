@@ -32,7 +32,10 @@ class OCRConfig:
         DS_OCR_DPI: DPI for PDF to image conversion
         DS_OCR_FALLBACK_ENABLED: Enable intelligent fallback
         DS_OCR_FALLBACK_MODE: Fallback mode to use
-        DS_OCR_MIN_OUTPUT_THRESHOLD: Minimum output length before fallback
+        DS_OCR_MIN_OUTPUT_THRESHOLD: Minimum output length before
+            fallback
+        DS_OCR_PAGE_SEPARATOR: Separator used between pages in
+            multi-page results
 
     Attributes:
         api_key: API key for authentication (required).
@@ -40,11 +43,17 @@ class OCRConfig:
         model_name: Name of the OCR model to use.
         timeout: Request timeout in seconds.
         max_tokens: Maximum number of tokens in the response.
-        temperature: Temperature for response generation (0.0 = deterministic).
-        dpi: DPI setting for PDF to image conversion (150, 200, or 300).
+        temperature: Temperature for response generation (0.0 =
+            deterministic).
+        dpi: DPI setting for PDF to image conversion (150, 200, or
+            300).
         fallback_enabled: Enable automatic fallback to better mode.
-        fallback_mode: Mode to fallback to when output is insufficient.
-        min_output_threshold: Minimum output length to trigger fallback.
+        fallback_mode: Mode to fallback to when output is
+            insufficient.
+        min_output_threshold: Minimum output length to trigger
+            fallback.
+        page_separator: Separator string used between pages in
+            multi-page results.
     """
 
     api_key: str
@@ -57,6 +66,7 @@ class OCRConfig:
     fallback_enabled: bool = True
     fallback_mode: str = "grounding"
     min_output_threshold: int = 500
+    page_separator: str = "\n\n---\n\n"
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
@@ -68,11 +78,13 @@ class OCRConfig:
 
         if not self.base_url:
             raise ConfigurationError(
-                "Base URL is required. Set DS_OCR_BASE_URL environment variable "
-                "or pass base_url parameter. "
+                "Base URL is required. Set DS_OCR_BASE_URL environment "
+                "variable or pass base_url parameter. "
                 "Known provider:\n"
-                "  - SiliconFlow: https://api.siliconflow.cn/v1/chat/completions\n"
-                "Note: DeepSeek's official API does not support the DeepSeek-OCR model."
+                "  - SiliconFlow: "
+                "https://api.siliconflow.cn/v1/chat/completions\n"
+                "Note: DeepSeek's official API does not support the "
+                "DeepSeek-OCR model."
             )
 
         if self.dpi not in [150, 200, 300]:
@@ -107,7 +119,8 @@ class OCRConfig:
             OCRConfig instance.
 
         Raises:
-            ConfigurationError: If required configuration is missing or invalid.
+            ConfigurationError: If required configuration is missing
+                or invalid.
 
         Example:
             >>> config = OCRConfig.from_env(dpi=300)
@@ -124,7 +137,8 @@ class OCRConfig:
             or os.getenv("DS_OCR_MODEL", "deepseek-ai/DeepSeek-OCR"),
         )
         timeout_str = cast(
-            str, overrides.get("timeout") or os.getenv("DS_OCR_TIMEOUT", "60")
+            str,
+            overrides.get("timeout") or os.getenv("DS_OCR_TIMEOUT", "60"),
         )
         timeout = int(timeout_str)
         max_tokens_str = cast(
@@ -156,6 +170,11 @@ class OCRConfig:
             or os.getenv("DS_OCR_MIN_OUTPUT_THRESHOLD", "500"),
         )
         min_output_threshold = int(min_threshold_str)
+        page_separator = cast(
+            str,
+            overrides.get("page_separator")
+            or os.getenv("DS_OCR_PAGE_SEPARATOR", "\n\n---\n\n"),
+        )
 
         return cls(
             api_key=api_key,
@@ -168,4 +187,5 @@ class OCRConfig:
             fallback_enabled=fallback_enabled,
             fallback_mode=fallback_mode,
             min_output_threshold=min_output_threshold,
+            page_separator=page_separator,
         )

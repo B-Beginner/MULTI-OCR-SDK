@@ -71,7 +71,7 @@ jobs:
 
     - name: Run flake8
       run: |
-        uv run flake8 deepseek_ocr/ --max-line-length=88 --extend-ignore=E203,W503
+        uv run flake8 deepseek_ocr/ tests/ --max-line-length=88 --extend-ignore=E203,W503
 
     - name: Run mypy
       run: |
