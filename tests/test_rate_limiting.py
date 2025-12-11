@@ -272,3 +272,102 @@ def test_rate_limit_exhausted_retries_sync(client):
             client._make_api_request_sync("image_b64", "prompt")
 
         assert exc_info.value.status_code == 429
+
+
+@pytest.mark.asyncio
+async def test_concurrent_async_requests_rate_limiting():
+    """Test that rate limiting works correctly with concurrent async requests."""
+    client = DeepSeekOCR(
+        api_key="test_key",
+        base_url="http://test.com",
+        request_delay=0.5,  # 500ms delay
+    )
+
+    request_times = []
+
+    async def create_mock_response():
+        # Record the time when the actual request is made
+        request_times.append(time.time())
+        mock_resp = AsyncMock()
+        mock_resp.status = 200
+        mock_resp.json = AsyncMock(
+            return_value={"choices": [{"message": {"content": "test"}}]}
+        )
+        return mock_resp
+
+    MockSession = create_mock_session(create_mock_response)
+
+    with patch("aiohttp.ClientSession", MockSession):
+        start_time = time.time()
+
+        # Make 3 concurrent requests
+        import asyncio
+
+        results = await asyncio.gather(
+            client._make_api_request_async("img1", "prompt"),
+            client._make_api_request_async("img2", "prompt"),
+            client._make_api_request_async("img3", "prompt"),
+        )
+
+        elapsed = time.time() - start_time
+
+        # All requests should succeed
+        assert len(results) == 3
+
+        # With global rate limiting and 0.5s delay, requests should be spaced 0.5s apart
+        # Total time should be at least 1.0s (0.5s * 2 intervals between 3 requests)
+        assert elapsed >= 1.0
+
+        # Verify requests were properly spaced
+        assert len(request_times) == 3
+        for i in range(1, len(request_times)):
+            time_diff = request_times[i] - request_times[i - 1]
+            # Each request should be at least 0.5s apart (with small tolerance)
+            assert time_diff >= 0.45
+
+
+@pytest.mark.asyncio
+async def test_concurrent_requests_with_multipage_pdf():
+    """Test rate limiting with concurrent page processing (asyncio.gather)."""
+    client = DeepSeekOCR(
+        api_key="test_key",
+        base_url="http://test.com",
+        request_delay=0.3,  # 300ms delay
+    )
+
+    request_times = []
+
+    async def create_mock_response():
+        request_times.append(time.time())
+        mock_resp = AsyncMock()
+        mock_resp.status = 200
+        mock_resp.json = AsyncMock(
+            return_value={"choices": [{"message": {"content": "page content"}}]}
+        )
+        return mock_resp
+
+    MockSession = create_mock_session(create_mock_response)
+
+    with patch("aiohttp.ClientSession", MockSession):
+        # Simulate processing 4 pages concurrently (like parse_async does)
+        start_time = time.time()
+
+        import asyncio
+
+        # This simulates what happens in parse_async with multiple pages
+        tasks = [client._make_api_request_async(f"page{i}", "prompt") for i in range(4)]
+        results = await asyncio.gather(*tasks)
+
+        elapsed = time.time() - start_time
+
+        # All 4 requests should succeed
+        assert len(results) == 4
+
+        # With 0.3s delay between requests, 4 requests need at least 0.9s
+        assert elapsed >= 0.85
+
+        # Verify spacing between requests
+        assert len(request_times) == 4
+        for i in range(1, len(request_times)):
+            time_diff = request_times[i] - request_times[i - 1]
+            assert time_diff >= 0.25  # Allow small tolerance

@@ -109,12 +109,12 @@ async def example_batch_with_rate_limiting():
     # For L0 tier (TPM: 80,000, RPM: 1,000):
     # - Average 1000 tokens per request → ~80 requests/minute max
     # - Safe rate: 60 requests/minute → 1 second delay
-    # - With 5 concurrent workers: 5 requests/second = 300 requests/minute
-    # - To stay under limit: use request_delay=2.0 (30 requests/minute)
+    # - With global rate limiting, request_delay enforces minimum time between ALL requests
+    # - With request_delay=2.0, max rate is 0.5 requests/second = 30 requests/minute
 
     client = DeepSeekOCR(
         api_key=API_KEY,
-        request_delay=2.0,  # 2-second delay per request
+        request_delay=2.0,  # 2-second delay between requests (global)
         enable_rate_limit_retry=True,
     )
 
@@ -125,8 +125,8 @@ async def example_batch_with_rate_limiting():
 
     files = list(Path("sample_docs").glob("*.pdf"))[:5]  # First 5 files
     print(f"Processing {len(files)} files with 3 concurrent workers")
-    print("Request delay: 2 seconds")
-    print("Effective rate: ~1.5 requests/second")
+    print("Request delay: 2 seconds (global rate limit)")
+    print("Effective rate: ~0.5 requests/second (1 request every 2 seconds)")
 
     try:
         summary = await processor.process_batch(

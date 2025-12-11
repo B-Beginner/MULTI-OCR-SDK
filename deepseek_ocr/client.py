@@ -8,6 +8,7 @@ import asyncio
 import base64
 import logging
 import re
+import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -88,7 +89,7 @@ class DeepSeekOCR:
                 or invalid.
         """
         # Build overrides dict from provided arguments
-        overrides = {}
+        overrides: Dict[str, Any] = {}
         if api_key is not None:
             overrides["api_key"] = api_key
         if base_url is not None:
@@ -117,32 +118,51 @@ class DeepSeekOCR:
         )
         # Track last request time for rate limiting
         self._last_request_time: Optional[float] = None
+        # Locks to ensure thread-safe and async-safe rate limiting
+        self._async_lock = asyncio.Lock()
+        self._sync_lock = threading.Lock()
 
     async def _apply_rate_limit_async(self) -> None:
         """
         Apply rate limiting delay before making a request (async).
 
         If request_delay is configured, ensures minimum time between requests.
+        Uses asyncio.Lock to ensure thread-safe access to _last_request_time
+        in concurrent async operations.
         """
-        if self.config.request_delay > 0 and self._last_request_time is not None:
-            elapsed = time.time() - self._last_request_time
-            if elapsed < self.config.request_delay:
-                delay = self.config.request_delay - elapsed
-                logger.debug(f"Rate limiting: waiting {delay:.2f}s before next request")
-                await asyncio.sleep(delay)
+        if self.config.request_delay > 0:
+            async with self._async_lock:
+                if self._last_request_time is not None:
+                    elapsed = time.time() - self._last_request_time
+                    if elapsed < self.config.request_delay:
+                        delay = self.config.request_delay - elapsed
+                        logger.debug(
+                            f"Rate limiting: waiting {delay:.2f}s before next request"
+                        )
+                        await asyncio.sleep(delay)
+                # Update last request time inside the lock
+                self._last_request_time = time.time()
 
     def _apply_rate_limit_sync(self) -> None:
         """
         Apply rate limiting delay before making a request (sync).
 
         If request_delay is configured, ensures minimum time between requests.
+        Uses threading.Lock to ensure thread-safe access to _last_request_time
+        in concurrent sync operations.
         """
-        if self.config.request_delay > 0 and self._last_request_time is not None:
-            elapsed = time.time() - self._last_request_time
-            if elapsed < self.config.request_delay:
-                delay = self.config.request_delay - elapsed
-                logger.debug(f"Rate limiting: waiting {delay:.2f}s before next request")
-                time.sleep(delay)
+        if self.config.request_delay > 0:
+            with self._sync_lock:
+                if self._last_request_time is not None:
+                    elapsed = time.time() - self._last_request_time
+                    if elapsed < self.config.request_delay:
+                        delay = self.config.request_delay - elapsed
+                        logger.debug(
+                            f"Rate limiting: waiting {delay:.2f}s before next request"
+                        )
+                        time.sleep(delay)
+                # Update last request time inside the lock
+                self._last_request_time = time.time()
 
     def _pdf_page_to_base64(self, doc: fitz.Document, page_num: int, dpi: int) -> str:
         """
@@ -342,11 +362,8 @@ class DeepSeekOCR:
         last_error = None
         for attempt in range(self.config.max_rate_limit_retries + 1):
             try:
-                # Apply rate limiting delay
+                # Apply rate limiting delay (updates _last_request_time atomically)
                 await self._apply_rate_limit_async()
-
-                # Update last request time
-                self._last_request_time = time.time()
 
                 async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.post(
@@ -447,11 +464,8 @@ class DeepSeekOCR:
         # Retry logic for rate limiting
         for attempt in range(self.config.max_rate_limit_retries + 1):
             try:
-                # Apply rate limiting delay
+                # Apply rate limiting delay (updates _last_request_time atomically)
                 self._apply_rate_limit_sync()
-
-                # Update last request time
-                self._last_request_time = time.time()
 
                 response = requests.post(
                     self.config.base_url,

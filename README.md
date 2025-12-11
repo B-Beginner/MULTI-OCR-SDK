@@ -337,7 +337,7 @@ processor = BatchProcessor(
     client,
     max_concurrent=3  # Process 3 files concurrently
 )
-# Effective rate: ~1.5 requests/second (30 seconds for 3 files)
+# Effective rate: ~0.5 requests/second (global rate limit, 1 request every 2 seconds)
 ```
 
 ### DPI Recommendations
