@@ -2,12 +2,10 @@
 Tests for rate limiting functionality.
 """
 
-import asyncio
 import time
 from typing import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import aiohttp
 import pytest
 
 from deepseek_ocr import DeepSeekOCR

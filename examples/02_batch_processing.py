@@ -140,7 +140,7 @@ async def batch_example_advanced():
             total_chars += len(result.text)
 
     print(f"Total characters extracted: {total_chars:,}")
-    print(f"\nMode distribution:")
+    print("\nMode distribution:")
     for mode, count in mode_counts.items():
         print(f"  {mode}: {count} documents")
 

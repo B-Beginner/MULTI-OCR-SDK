@@ -126,7 +126,7 @@ async def example_batch_with_rate_limiting():
     files = list(Path("sample_docs").glob("*.pdf"))[:5]  # First 5 files
     print(f"Processing {len(files)} files with 3 concurrent workers")
     print("Request delay: 2 seconds")
-    print(f"Effective rate: ~1.5 requests/second")
+    print("Effective rate: ~1.5 requests/second")
 
     try:
         summary = await processor.process_batch(
