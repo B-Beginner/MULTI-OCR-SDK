@@ -5,7 +5,7 @@ This example demonstrates the basic usage of DeepSeek OCR SDK.
 """
 
 import os
-from deepseek_ocr import DeepSeekOCR
+from multi_ocr import DeepSeekOCR
 
 # Set your API key (or use DS_OCR_API_KEY environment variable)
 API_KEY = os.getenv("DS_OCR_API_KEY", "your_api_key_here")

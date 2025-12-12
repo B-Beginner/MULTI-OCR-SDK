@@ -8,7 +8,7 @@ Replace `API_KEY` and `BASE_URL` with your values or set
 import os
 from pprint import pprint
 
-from deepseek_ocr import vlm_client
+from multi_ocr import vlm_client
 
 API_KEY = os.getenv("VLM_API_KEY", "123454")
 BASE_URL = os.getenv("VLM_BASE_URL", "http://localhost:8000/v1")

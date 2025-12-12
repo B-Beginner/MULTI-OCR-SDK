@@ -4,7 +4,7 @@
 
 import pytest
 
-from deepseek_ocr import VLM, vlm_client
+from multi_ocr import VLM, vlm_client
 
 
 def test_vlm_import_and_structure():

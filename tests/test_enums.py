@@ -1,6 +1,6 @@
 """Tests for enums module."""
 
-from deepseek_ocr import OCRMode
+from multi_ocr import OCRMode
 
 
 def test_ocr_mode_values():

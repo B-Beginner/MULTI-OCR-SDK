@@ -1,6 +1,6 @@
-# DeepSeek-OCR-SDK
+# MULTI-OCR-SDK
 
-[![PyPI version](https://img.shields.io/pypi/v/deepseek-ocr.svg)](https://pypi.org/project/deepseek-ocr/)
+[![PyPI version](https://img.shields.io/pypi/v/multi-ocr-sdk.svg)](https://pypi.org/project/multi-ocr-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -14,7 +14,7 @@
 ## English
 
 ### Overview
-
+this repo is based on [DeepSeek-OCR-SDK](https://github.com/BukeLy/DeepSeek-OCR-SDK/commit/8abaa8e26e6160830cd14805f7072db24f10b5bb), aimed to support multi ocr platform, like deepseek-ocr , vlm(qwenvel)
 **DeepSeek-OCR-SDK** is a simple and efficient Python SDK for the DeepSeek OCR API. It provides a clean, production-ready interface for converting documents (PDF, images) to Markdown text with high accuracy and performance.
 
 ### Key Features
@@ -471,7 +471,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 中文
 
 ### 简介
-
+本项目基于 [DeepSeek-OCR-SDK](https://github.com/BukeLy/DeepSeek-OCR-SDK/commit/8abaa8e26e6160830cd14805f7072db24f10b5bb)开发，致力于支持多平台的ocr sdk，如deepseek-ocr、vlm（qwenvl）
 **DeepSeek-OCR-SDK** 是一个简单高效的 Python SDK，用于调用 DeepSeek OCR API。它提供了简洁、生产级的接口，可以高精度、高性能地将文档（PDF、图片）转换为 Markdown 文本。
 
 ### 核心特性

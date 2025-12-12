@@ -8,7 +8,7 @@ Replace `API_KEY` and `BASE_URL` with your values or set
 import os
 from pprint import pprint
 
-from deepseek_ocr import vlm_client
+from multi_ocr import vlm_client
 
 API_KEY = os.getenv("DS_OCR_API_KEY", "your_api_key_here")
 BASE_URL = os.getenv("DS_OCR_BASE_URL", "http://localhost:8000/v1/chat/completions")

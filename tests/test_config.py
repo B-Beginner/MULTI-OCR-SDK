@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from deepseek_ocr import ConfigurationError, OCRConfig
+from multi_ocr import ConfigurationError, OCRConfig
 
 
 def test_config_from_env_with_api_key():

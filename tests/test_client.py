@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from deepseek_ocr import DeepSeekOCR
-from deepseek_ocr.exceptions import FileProcessingError
+from multi_ocr import DeepSeekOCR
+from multi_ocr.exceptions import FileProcessingError
 
 
 @pytest.fixture

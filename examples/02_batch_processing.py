@@ -9,7 +9,7 @@ import asyncio
 import os
 from pathlib import Path
 
-from deepseek_ocr import DeepSeekOCR, BatchProcessor
+from multi_ocr import DeepSeekOCR, BatchProcessor
 
 # Set your API key
 API_KEY = os.getenv("DS_OCR_API_KEY", "your_api_key_here")
