@@ -25,6 +25,8 @@ class DeepSeekOCR:
     This client provides synchronous methods for
     document OCR processing using the DeepSeek OCR API.
 
+    Note:
+        Asynchronous support has been removed. Only synchronous methods are available in this version.
     Example:
         >>> # Synchronous usage
         >>> client = DeepSeekOCR(api_key="your_api_key")
