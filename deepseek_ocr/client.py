@@ -343,25 +343,23 @@ class DeepSeekOCR:
         try:
             # Convert to Path object
             input_path = Path(file_path)
-            
+
             # Create output directory in current working directory
             output_dir = Path.cwd() / "ocr-output"
             output_dir.mkdir(exist_ok=True)
-            
+
             # Create output filename with .md extension
             output_filename = input_path.stem + ".md"
             output_path = output_dir / output_filename
-            
+
             # Write the text to file
             output_path.write_text(text, encoding="utf-8")
-            
+
             logger.info(f"Saved OCR output to {output_path}")
             return output_path
-            
+
         except Exception as e:
-            raise FileProcessingError(
-                f"Failed to save output file: {e}"
-            ) from e
+            raise FileProcessingError(f"Failed to save output file: {e}") from e
 
     async def _make_api_request_async(
         self, image_b64: str, prompt: str
@@ -738,11 +736,11 @@ class DeepSeekOCR:
             f"Successfully processed {file_path}: "
             f"{len(images)} page(s), {len(combined_text)} chars"
         )
-        
+
         # Save to file if requested
         if save:
             self._save_output(combined_text, file_path)
-        
+
         return combined_text
 
     def parse(
@@ -906,9 +904,9 @@ class DeepSeekOCR:
             f"Successfully processed {file_path}: "
             f"{len(images)} page(s), {len(combined_text)} chars"
         )
-        
+
         # Save to file if requested
         if save:
             self._save_output(combined_text, file_path)
-        
+
         return combined_text

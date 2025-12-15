@@ -56,13 +56,15 @@ def main():
             "sample_docs/doc2.pdf",
             "sample_docs/doc3.pdf",
         ]
-        
+
         for doc_file in doc_files:
             if Path(doc_file).exists():
                 text = client.parse(doc_file, save=True)
                 filename = Path(doc_file).stem
-                print(f"✓ Processed and saved: ocr-output/{filename}.md ({len(text)} chars)")
-        
+                print(
+                    f"✓ Processed and saved: ocr-output/{filename}.md ({len(text)} chars)"
+                )
+
         print("\n" + "=" * 60 + "\n")
     except Exception as e:
         print(f"Error: {e}\n")
@@ -103,7 +105,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print("Save Output Examples")
     print("=" * 60 + "\n")
-    
+
     main()
 
     # Uncomment to run async example
