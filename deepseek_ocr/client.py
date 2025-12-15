@@ -330,6 +330,10 @@ class DeepSeekOCR:
         """
         Save OCR output to markdown file in ocr-output folder.
 
+        The file is saved in the current working directory under the
+        'ocr-output' subdirectory. The output filename matches the input
+        file's stem (filename without extension) with a '.md' extension.
+
         Args:
             text: OCR output text.
             file_path: Original input file path.

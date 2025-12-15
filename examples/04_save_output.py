@@ -57,6 +57,7 @@ def main():
             "sample_docs/doc3.pdf",
         ]
 
+        processed_count = 0
         for doc_file in doc_files:
             if Path(doc_file).exists():
                 text = client.parse(doc_file, save=True)
@@ -64,6 +65,12 @@ def main():
                 print(
                     f"✓ Processed and saved: ocr-output/{filename}.md ({len(text)} chars)"
                 )
+                processed_count += 1
+            else:
+                print(f"⚠ Skipping {doc_file} (file not found)")
+
+        if processed_count == 0:
+            print("No files were processed (sample files not found)")
 
         print("\n" + "=" * 60 + "\n")
     except Exception as e:
