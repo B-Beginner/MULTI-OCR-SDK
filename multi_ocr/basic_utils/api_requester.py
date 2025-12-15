@@ -38,6 +38,7 @@ class APIRequester:
         headers: Dict[str, str],
         payload: Dict[str, Any],
         enable_rate_limit_retry: bool = True,
+        timeout_override: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Make async API request with rate limiting and retry.
@@ -56,7 +57,7 @@ class APIRequester:
             RateLimitError: If rate limit is exceeded and retries exhausted.
             TimeoutError: If request times out.
         """
-        timeout = aiohttp.ClientTimeout(total=self.timeout)
+        timeout = aiohttp.ClientTimeout(total=timeout_override or self.timeout)
         last_error = None
 
         for attempt in range(self.rate_limiter.max_retries + 1):
@@ -124,6 +125,7 @@ class APIRequester:
         headers: Dict[str, str],
         payload: Dict[str, Any],
         enable_rate_limit_retry: bool = True,
+        timeout_override: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Make synchronous API request with rate limiting and retry.
@@ -153,7 +155,7 @@ class APIRequester:
                     url,
                     headers=headers,
                     json=payload,
-                    timeout=self.timeout,
+                    timeout=timeout_override or self.timeout,
                 )
 
                 # Handle rate limiting (429)

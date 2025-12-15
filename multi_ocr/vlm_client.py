@@ -184,6 +184,7 @@ class VLMClient:
         model: Optional[str] = None,
         dpi: int = 72,
         pages: Optional[Union[int, List[int]]] = None,
+        timeout: Optional[int] = None,
         **kwargs: Any,
     ) -> str:
         """
@@ -225,6 +226,7 @@ class VLMClient:
             result = await self.chat.completions.create_async(
                 model=model or self.config.model_name,
                 messages=messages,
+                timeout=timeout,
                 **kwargs
             )
             
@@ -254,6 +256,7 @@ class VLMClient:
         model: Optional[str] = None,
         dpi: int = 72,
         pages: Optional[Union[int, List[int]]] = None,
+        timeout: Optional[int] = None,
         **kwargs: Any,
     ) -> str:
         """
@@ -298,6 +301,7 @@ class VLMClient:
             result = self.chat.completions.create(
                 model=model or self.config.model_name,
                 messages=messages,
+                timeout=timeout,
                 **kwargs
             )
             
@@ -315,7 +319,7 @@ class VLMClient:
     def _apply_rate_limit_sync(self) -> None:
         self._rate_limiter.apply_rate_limit_sync()
 
-    async def _make_api_request_async(self, model: str, messages: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+    async def _make_api_request_async(self, model: str, messages: List[Dict[str, Any]], timeout: Optional[int] = None, **kwargs: Any) -> Dict[str, Any]:
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
             "Content-Type": "application/json",
@@ -332,9 +336,10 @@ class VLMClient:
             headers,
             payload,
             enable_rate_limit_retry=self.config.enable_rate_limit_retry,
+            timeout_override=timeout,
         )
 
-    def _make_api_request_sync(self, model: str, messages: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+    def _make_api_request_sync(self, model: str, messages: List[Dict[str, Any]], timeout: Optional[int] = None, **kwargs: Any) -> Dict[str, Any]:
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
             "Content-Type": "application/json",
@@ -351,6 +356,7 @@ class VLMClient:
             headers,
             payload,
             enable_rate_limit_retry=self.config.enable_rate_limit_retry,
+            timeout_override=timeout,
         )
 
 

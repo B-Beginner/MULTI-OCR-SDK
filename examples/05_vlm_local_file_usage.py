@@ -10,15 +10,10 @@ from pprint import pprint
 from multi_ocr import VLMClient
 
 
-API_KEY = os.getenv("DS_OCR_API_KEY", "your_api_key_here")
-BASE_URL = os.getenv("DS_OCR_BASE_URL", "http://localhost:8000/v1/chat/completions")
-
-# Initialize the VLM client (uses installed package)
+API_KEY = os.getenv("VLM_API_KEY", "your_api_key_here")
+BASE_URL = os.getenv("VLM_BASE_URL", "http://localhost:8000/v1/chat/completions")
 client = VLMClient(api_key=API_KEY, base_url=BASE_URL)
-
-# Path to your local file (PDF or Image)
-# You can place a PDF or image file in this directory to test
-file_path = "./example_files/dog_and_girl.jpeg" 
+file_path = "./examples/example_files/DeepSeek_OCR_paper_mini.pdf" 
 
 # Check if file exists
 if not os.path.exists(file_path):
@@ -33,9 +28,10 @@ else:
         # Note: Reducing DPI to 72 (or lower) to avoid exceeding token limits for large PDFs
         result = client.parse(
             file_path=file_path,
-            prompt="你是一个ocr机器人，识别输入的文件内容，输出为markdown格式，尽可能保留图标等格式信息，你不需要评论概括文件内容，只需要输出就行",
+            prompt="你是一个ocr机器人，识别输入的文件内容，输出为markdown格式，尽可能保留图表等格式信息，你不需要评论概括文件内容，只需要输出就行",
             model="Qwen3-VL-8B",
-            dpi=72  # Standard screen DPI is usually sufficient for VLM
+            timeout=100,
+            dpi=30  # Standard screen DPI is usually sufficient for VLM
         )
 
         print("\n--- Result ---")

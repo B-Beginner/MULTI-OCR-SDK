@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import fitz  # PyMuPDF
+import base64
 
 from ..exceptions import FileProcessingError
 
@@ -87,6 +88,16 @@ class FileProcessor:
             if not file_path.exists():
                 raise FileProcessingError(f"File not found: {file_path}")
 
+            # Support common image files directly (single-image -> single base64 string)
+            image_exts = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tif", ".tiff"}
+            if file_path.suffix.lower() in image_exts:
+                try:
+                    img_bytes = file_path.read_bytes()
+                    return base64.b64encode(img_bytes).decode("utf-8")
+                except Exception as e:
+                    raise FileProcessingError(f"Failed to read image file: {e}") from e
+
+            # Fallback to PDF-like handling for multi-page documents (uses PyMuPDF)
             doc = fitz.open(str(file_path))
             try:
                 if len(doc) == 0:
