@@ -4,15 +4,15 @@
 
 import pytest
 
-from multi_ocr import VLM, vlm_client
+from multi_ocr import VLMClient, vlm_client
 
 
 def test_vlm_import_and_structure():
     # Ensure vlm module is importable and symbols exist
-    assert hasattr(vlm_client, "VLM") or hasattr(vlm_client, "VLMClient")
+    assert hasattr(vlm_client, "VLMClient")
 
     # Construct a VLM client instance with dummy values (no network calls)
-    client = VLM(api_key="test", base_url="http://localhost:8000/v1")
+    client = VLMClient(api_key="test", base_url="http://localhost:8000/v1")
     assert hasattr(client, "chat")
     assert hasattr(client.chat, "completions")
     assert hasattr(client.chat.completions, "create")

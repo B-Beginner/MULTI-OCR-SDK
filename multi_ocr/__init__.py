@@ -18,7 +18,7 @@ Features:
 """
 
 from .batch import BatchProcessor, BatchResult, BatchSummary
-from .client import DeepSeekOCR
+from .deepseek_client import DeepSeekOCR
 from .config import OCRConfig
 from .enums import OCRMode
 from .exceptions import (
@@ -31,7 +31,7 @@ from .exceptions import (
     TimeoutError,
 )
 from . import vlm_client
-from .vlm_client import VLM
+from .vlm_client import VLMClient
 
 __version__ = "0.1.0"
 __author__ = "Chengjie"
@@ -50,7 +50,7 @@ __all__ = [
     "BatchSummary",
     # VLM support
     "vlm_client",
-    "VLM",
+    "VLMClient",
     # Exceptions
     "DeepSeekOCRError",
     "ConfigurationError",

@@ -8,12 +8,15 @@ Replace `API_KEY` and `BASE_URL` with your values or set
 import os
 from pprint import pprint
 
-from multi_ocr import vlm_client
+# Install via pip (if not installed locally):
+# pip install multi-ocr-sdk
+
+from multi_ocr import VLMClient
 
 API_KEY = os.getenv("VLM_API_KEY", "123454")
 BASE_URL = os.getenv("VLM_BASE_URL", "http://localhost:8000/v1")
 
-client = vlm_client.VLM(api_key=API_KEY, base_url=BASE_URL)
+client = VLMClient(api_key=API_KEY, base_url=BASE_URL)
 
 messages = [
     {

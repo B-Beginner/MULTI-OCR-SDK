@@ -13,7 +13,7 @@ from typing import Any, List, Optional, Union
 
 from tqdm import tqdm
 
-from .client import DeepSeekOCR
+from .deepseek_client import DeepSeekOCR
 from .enums import OCRMode
 
 logger = logging.getLogger(__name__)

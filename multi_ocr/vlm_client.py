@@ -10,17 +10,10 @@ from __future__ import annotations
 
 import os
 import asyncio
-import base64
 import logging
-import time
-import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-
-import aiohttp
-import fitz  # PyMuPDF
-import requests
 
 from .exceptions import (
     APIError,
@@ -29,6 +22,7 @@ from .exceptions import (
     RateLimitError,
     TimeoutError,
 )
+from .basic_utils import FileProcessor, RateLimiter, APIRequester
 
 logger = logging.getLogger(__name__)
 
@@ -169,92 +163,19 @@ class VLMClient:
         
         self.config = VLMConfig.from_env(**config_args)
         
-        # last request time & locks for rate-limiting
-        self._last_request_time: Optional[float] = None
-        self._async_lock: Optional[asyncio.Lock] = None
-        self._sync_lock = threading.Lock()
+        # Initialize shared utilities
+        self._rate_limiter = RateLimiter(
+            request_delay=self.config.request_delay,
+            max_retries=self.config.max_rate_limit_retries,
+            retry_delay=self.config.rate_limit_retry_delay,
+        )
+        self._api_requester = APIRequester(self._rate_limiter, self.config.timeout)
 
         # Provide a chat API surface similar to other SDKs
         self.chat = _ChatAPI(self)
 
     def _get_async_lock(self) -> asyncio.Lock:
-        if self._async_lock is None:
-            self._async_lock = asyncio.Lock()
-        return self._async_lock
-
-    def _pdf_page_to_base64(self, doc: fitz.Document, page_num: int, dpi: int) -> str:
-        """Convert a single PDF page (or image frame) to base64-encoded image."""
-        try:
-            page = doc[page_num]
-            # Render page to image
-            mat = fitz.Matrix(dpi / 72, dpi / 72)
-            pix = page.get_pixmap(matrix=mat)
-            # Convert to bytes
-            img_bytes = pix.tobytes("png")
-            # Encode to base64
-            b64_string = base64.b64encode(img_bytes).decode("utf-8")
-            return b64_string
-        except Exception as e:
-            raise FileProcessingError(f"Failed to process page {page_num + 1}: {e}") from e
-
-    def _file_to_base64(
-        self,
-        file_path: Union[str, Path],
-        dpi: int = 72,
-        pages: Optional[Union[int, List[int]]] = None,
-    ) -> Union[str, List[str]]:
-        """Convert file (PDF or image) to base64-encoded image(s)."""
-        try:
-            file_path = Path(file_path)
-            if not file_path.exists():
-                raise FileProcessingError(f"File not found: {file_path}")
-
-            doc = fitz.open(str(file_path))
-            try:
-                if len(doc) == 0:
-                    raise FileProcessingError(f"File has no pages: {file_path}")
-
-                # Determine which pages to process
-                if pages is None:
-                    page_nums = list(range(len(doc)))
-                elif isinstance(pages, int):
-                    if pages < 1 or pages > len(doc):
-                        raise FileProcessingError(
-                            f"Page {pages} out of range. Valid range: 1 to {len(doc)}"
-                        )
-                    page_nums = [pages - 1]
-                else:
-                    if not pages:
-                        raise FileProcessingError("Pages list cannot be empty.")
-                    seen = set()
-                    page_nums = []
-                    for p in pages:
-                        if p < 1 or p > len(doc):
-                            raise FileProcessingError(
-                                f"Page {p} out of range. Valid range: 1 to {len(doc)}"
-                            )
-                        page_idx = p - 1
-                        if page_idx not in seen:
-                            seen.add(page_idx)
-                            page_nums.append(page_idx)
-
-                # Process pages
-                results = []
-                for page_num in page_nums:
-                    b64_string = self._pdf_page_to_base64(doc, page_num, dpi)
-                    results.append(b64_string)
-
-                if len(results) == 1:
-                    return results[0]
-                return results
-
-            finally:
-                doc.close()
-
-        except Exception as e:
-            if isinstance(e, FileProcessingError):
-                raise
-            raise FileProcessingError(f"Failed to process file: {e}") from e
+        return self._rate_limiter._get_async_lock()
 
     async def parse_async(
         self,
@@ -279,8 +200,8 @@ class VLMClient:
         Returns:
             Combined text response from all processed pages.
         """
-        # Convert file to base64 images
-        image_b64_result = self._file_to_base64(file_path, dpi, pages)
+        # Convert file to base64 images using shared utility
+        image_b64_result = FileProcessor.file_to_base64(file_path, dpi, pages)
         
         if isinstance(image_b64_result, str):
             images = [image_b64_result]
@@ -351,8 +272,8 @@ class VLMClient:
         Returns:
             Combined text response from all processed pages.
         """
-        # Convert file to base64 images
-        image_b64_result = self._file_to_base64(file_path, dpi, pages)
+        # Convert file to base64 images using shared utility
+        image_b64_result = FileProcessor.file_to_base64(file_path, dpi, pages)
         
         if isinstance(image_b64_result, str):
             images = [image_b64_result]
@@ -389,26 +310,10 @@ class VLMClient:
         return "\n\n---\n\n".join(all_texts)
 
     async def _apply_rate_limit_async(self) -> None:
-        if self.config.request_delay > 0:
-            async with self._get_async_lock():
-                if self._last_request_time is not None:
-                    elapsed = time.time() - self._last_request_time
-                    if elapsed < self.config.request_delay:
-                        delay = self.config.request_delay - elapsed
-                        logger.debug(f"VLM rate limiting: sleeping {delay:.2f}s")
-                        await asyncio.sleep(delay)
-                self._last_request_time = time.time()
+        await self._rate_limiter.apply_rate_limit_async()
 
     def _apply_rate_limit_sync(self) -> None:
-        if self.config.request_delay > 0:
-            with self._sync_lock:
-                if self._last_request_time is not None:
-                    elapsed = time.time() - self._last_request_time
-                    if elapsed < self.config.request_delay:
-                        delay = self.config.request_delay - elapsed
-                        logger.debug(f"VLM rate limiting: sleeping {delay:.2f}s")
-                        time.sleep(delay)
-                self._last_request_time = time.time()
+        self._rate_limiter.apply_rate_limit_sync()
 
     async def _make_api_request_async(self, model: str, messages: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
         headers = {
@@ -422,32 +327,12 @@ class VLMClient:
             "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
         }
 
-        timeout = aiohttp.ClientTimeout(total=self.config.timeout)
-        last_error = None
-        for attempt in range(self.config.max_rate_limit_retries + 1):
-            try:
-                await self._apply_rate_limit_async()
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-                    async with session.post(self.config.base_url, headers=headers, json=payload) as resp:
-                        if resp.status == 429:
-                            text = await resp.text()
-                            if not self.config.enable_rate_limit_retry or attempt >= self.config.max_rate_limit_retries:
-                                raise RateLimitError(f"Rate limit exceeded: {text}", status_code=429, response_text=text)
-                            retry_delay = self.config.rate_limit_retry_delay * (2 ** attempt)
-                            logger.warning(f"VLM 429 received, retrying in {retry_delay}s (attempt {attempt + 1})")
-                            await asyncio.sleep(retry_delay)
-                            last_error = RateLimitError(f"Rate limit exceeded: {text}", status_code=429, response_text=text)
-                            continue
-                        if resp.status != 200:
-                            text = await resp.text()
-                            raise APIError(f"VLM API failed: {text}", status_code=resp.status, response_text=text)
-                        data = await resp.json()
-                        return data
-            except asyncio.TimeoutError as e:
-                raise TimeoutError(f"VLM request timed out after {self.config.timeout} seconds") from e
-        if last_error:
-            raise last_error
-        raise RateLimitError("VLM rate limit retries exhausted", status_code=429)
+        return await self._api_requester.request_async(
+            self.config.base_url,
+            headers,
+            payload,
+            enable_rate_limit_retry=self.config.enable_rate_limit_retry,
+        )
 
     def _make_api_request_sync(self, model: str, messages: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
         headers = {
@@ -461,26 +346,12 @@ class VLMClient:
             "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
         }
 
-        for attempt in range(self.config.max_rate_limit_retries + 1):
-            try:
-                self._apply_rate_limit_sync()
-                resp = requests.post(self.config.base_url, headers=headers, json=payload, timeout=self.config.timeout)
-                if resp.status_code == 429:
-                    text = resp.text
-                    if not self.config.enable_rate_limit_retry or attempt >= self.config.max_rate_limit_retries:
-                        raise RateLimitError(f"Rate limit exceeded: {text}", status_code=429, response_text=text)
-                    retry_delay = self.config.rate_limit_retry_delay * (2 ** attempt)
-                    logger.warning(f"VLM 429 received, retrying in {retry_delay}s (attempt {attempt + 1})")
-                    time.sleep(retry_delay)
-                    continue
-                if resp.status_code != 200:
-                    raise APIError(f"VLM API failed: {resp.text}", status_code=resp.status_code, response_text=resp.text)
-                return resp.json()
-            except requests.Timeout as e:
-                raise TimeoutError(f"VLM request timed out after {self.config.timeout} seconds") from e
-        raise RateLimitError("VLM rate limit retries exhausted", status_code=429)
+        return self._api_requester.request_sync(
+            self.config.base_url,
+            headers,
+            payload,
+            enable_rate_limit_retry=self.config.enable_rate_limit_retry,
+        )
 
 
-VLM = VLMClient
-
-__all__ = ["VLM", "VLMClient", "VLMConfig"]
+__all__ = ["VLMClient", "VLMConfig"]

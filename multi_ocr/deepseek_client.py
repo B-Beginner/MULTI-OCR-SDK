@@ -1,25 +1,19 @@
 """
-Core OCR client for DeepSeek OCR SDK.
+DeepSeek OCR client for the multi-OCR SDK.
 
-This module provides the main client for interacting with the DeepSeek OCR API.
+This module provides the main client for interacting with the DeepSeek OCR API,
+using shared utilities from basic_utils for file processing, rate limiting, and API requests.
 """
 
-import asyncio
-import base64
 import logging
 import re
-import threading
-import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import aiohttp
-import fitz  # PyMuPDF
-import requests
-
 from .config import OCRConfig
 from .enums import OCRMode
-from .exceptions import APIError, FileProcessingError, RateLimitError, TimeoutError
+from .exceptions import APIError, FileProcessingError
+from .basic_utils import FileProcessor, RateLimiter, APIRequester
 
 logger = logging.getLogger(__name__)
 
@@ -116,188 +110,14 @@ class DeepSeekOCR:
         logger.info(
             f"Initialized DeepSeekOCR client with model: {self.config.model_name}"
         )
-        # Track last request time for rate limiting
-        self._last_request_time: Optional[float] = None
-        # Locks to ensure thread-safe and async-safe rate limiting
-        self._async_lock: Optional[asyncio.Lock] = None
-        self._sync_lock = threading.Lock()
 
-    def _get_async_lock(self) -> asyncio.Lock:
-        """
-        Get or create the async lock for rate limiting.
-
-        Lazy initialization to avoid issues when client is created
-        outside an event loop.
-        """
-        if self._async_lock is None:
-            self._async_lock = asyncio.Lock()
-        return self._async_lock
-
-    async def _apply_rate_limit_async(self) -> None:
-        """
-        Apply rate limiting delay before making a request (async).
-
-        If request_delay is configured, ensures minimum time between requests.
-        Uses asyncio.Lock to ensure thread-safe access to _last_request_time
-        in concurrent async operations.
-        """
-        if self.config.request_delay > 0:
-            async with self._get_async_lock():
-                if self._last_request_time is not None:
-                    elapsed = time.time() - self._last_request_time
-                    if elapsed < self.config.request_delay:
-                        delay = self.config.request_delay - elapsed
-                        logger.debug(
-                            f"Rate limiting: waiting {delay:.2f}s before next request"
-                        )
-                        await asyncio.sleep(delay)
-                # Update last request time inside the lock
-                self._last_request_time = time.time()
-
-    def _apply_rate_limit_sync(self) -> None:
-        """
-        Apply rate limiting delay before making a request (sync).
-
-        If request_delay is configured, ensures minimum time between requests.
-        Uses threading.Lock to ensure thread-safe access to _last_request_time
-        in concurrent sync operations.
-        """
-        if self.config.request_delay > 0:
-            with self._sync_lock:
-                if self._last_request_time is not None:
-                    elapsed = time.time() - self._last_request_time
-                    if elapsed < self.config.request_delay:
-                        delay = self.config.request_delay - elapsed
-                        logger.debug(
-                            f"Rate limiting: waiting {delay:.2f}s before next request"
-                        )
-                        time.sleep(delay)
-                # Update last request time inside the lock
-                self._last_request_time = time.time()
-
-    def _pdf_page_to_base64(self, doc: fitz.Document, page_num: int, dpi: int) -> str:
-        """
-        Convert a single PDF page to base64-encoded image.
-
-        Args:
-            doc: PyMuPDF document object.
-            page_num: Page number (0-indexed).
-            dpi: DPI for rendering (150, 200, or 300).
-
-        Returns:
-            Base64-encoded image string.
-
-        Raises:
-            FileProcessingError: If page cannot be processed.
-        """
-        try:
-            page = doc[page_num]
-            # Render page to image
-            mat = fitz.Matrix(dpi / 72, dpi / 72)
-            pix = page.get_pixmap(matrix=mat)
-
-            # Convert to bytes
-            img_bytes = pix.tobytes("png")
-
-            # Encode to base64
-            b64_string = base64.b64encode(img_bytes).decode("utf-8")
-            logger.debug(
-                f"Converted page {page_num + 1} to image: "
-                f"{len(b64_string)} bytes at {dpi} DPI"
-            )
-            return b64_string
-
-        except Exception as e:
-            raise FileProcessingError(
-                f"Failed to process page {page_num + 1}: {e}"
-            ) from e
-
-    def _pdf_to_base64(
-        self,
-        file_path: Union[str, Path],
-        dpi: int,
-        pages: Optional[Union[int, List[int]]] = None,
-    ) -> Union[str, List[str]]:
-        """
-        Convert PDF pages to base64-encoded image(s).
-
-        Args:
-            file_path: Path to the PDF file.
-            dpi: DPI for rendering (150, 200, or 300).
-            pages: Page(s) to process. Can be:
-                   - None: Process all pages (default)
-                   - int: Process single page (1-indexed)
-                   - list: Process specific pages (1-indexed)
-
-        Returns:
-            Base64-encoded image string (single page) or
-            list of strings (multiple pages).
-
-        Raises:
-            FileProcessingError: If file cannot be processed.
-        """
-        try:
-            file_path = Path(file_path)
-            if not file_path.exists():
-                raise FileProcessingError(f"File not found: {file_path}")
-
-            doc = fitz.open(str(file_path))
-            try:
-                if len(doc) == 0:
-                    raise FileProcessingError(f"PDF has no pages: {file_path}")
-
-                # Determine which pages to process
-                if pages is None:
-                    # Process all pages
-                    page_nums = list(range(len(doc)))
-                elif isinstance(pages, int):
-                    # Process single page (convert 1-indexed to 0-indexed)
-                    if pages < 1 or pages > len(doc):
-                        raise FileProcessingError(
-                            f"Page {pages} out of range. Page numbers are 1-indexed "
-                            f"(valid range: 1 to {len(doc)})"
-                        )
-                    page_nums = [pages - 1]
-                else:
-                    # Process list of pages (convert 1-indexed to 0-indexed)
-                    if not pages:
-                        raise FileProcessingError(
-                            "Pages list cannot be empty. "
-                            "Use None to process all pages."
-                        )
-
-                    # Deduplicate while preserving order
-                    seen = set()
-                    page_nums = []
-                    for p in pages:
-                        if p < 1 or p > len(doc):
-                            raise FileProcessingError(
-                                f"Page {p} out of range. Page numbers are 1-indexed "
-                                f"(valid range: 1 to {len(doc)})"
-                            )
-                        page_idx = p - 1
-                        if page_idx not in seen:
-                            seen.add(page_idx)
-                            page_nums.append(page_idx)
-
-                # Process pages
-                results = []
-                for page_num in page_nums:
-                    b64_string = self._pdf_page_to_base64(doc, page_num, dpi)
-                    results.append(b64_string)
-
-                # Return single string if single page, list otherwise
-                if len(results) == 1:
-                    return results[0]
-                return results
-
-            finally:
-                doc.close()
-
-        except Exception as e:
-            if isinstance(e, FileProcessingError):
-                raise
-            raise FileProcessingError(f"Failed to process PDF: {e}") from e
+        # Initialize shared utilities
+        self._rate_limiter = RateLimiter(
+            request_delay=self.config.request_delay,
+            max_retries=self.config.max_rate_limit_retries,
+            retry_delay=self.config.rate_limit_retry_delay,
+        )
+        self._api_requester = APIRequester(self._rate_limiter, self.config.timeout)
 
     def _build_prompt(self, mode: OCRMode) -> str:
         """
@@ -325,205 +145,6 @@ class DeepSeekOCR:
         text = re.sub(r"<\|ref\|>", "", text)
         text = re.sub(r"<\|det\|>", "", text)
         return text.strip()
-
-    async def _make_api_request_async(
-        self, image_b64: str, prompt: str
-    ) -> Dict[str, Any]:
-        """
-        Make async API request to DeepSeek OCR with rate limiting and retry.
-
-        Args:
-            image_b64: Base64-encoded image.
-            prompt: Prompt for OCR processing.
-
-        Returns:
-            API response as dictionary.
-
-        Raises:
-            APIError: If API returns an error.
-            RateLimitError: If rate limit is exceeded and retries exhausted.
-            TimeoutError: If request times out.
-        """
-        headers = {
-            "Authorization": f"Bearer {self.config.api_key}",
-            "Content-Type": "application/json",
-        }
-
-        payload = {
-            "model": self.config.model_name,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/png;base64,{image_b64}"},
-                        },
-                        {"type": "text", "text": prompt},
-                    ],
-                }
-            ],
-            "temperature": self.config.temperature,
-            "max_tokens": self.config.max_tokens,
-        }
-
-        timeout = aiohttp.ClientTimeout(total=self.config.timeout)
-
-        # Retry logic for rate limiting
-        last_error = None
-        for attempt in range(self.config.max_rate_limit_retries + 1):
-            try:
-                # Apply rate limiting delay (updates _last_request_time atomically)
-                await self._apply_rate_limit_async()
-
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-                    async with session.post(
-                        self.config.base_url, headers=headers, json=payload
-                    ) as response:
-                        # Handle rate limiting (429)
-                        if response.status == 429:
-                            error_text = await response.text()
-
-                            if (
-                                not self.config.enable_rate_limit_retry
-                                or attempt >= self.config.max_rate_limit_retries
-                            ):
-                                raise RateLimitError(
-                                    f"Rate limit exceeded: {error_text}",
-                                    status_code=429,
-                                    response_text=error_text,
-                                )
-
-                            # Exponential backoff: delay * (2 ^ attempt)
-                            retry_delay = self.config.rate_limit_retry_delay * (
-                                2**attempt
-                            )
-                            logger.warning(
-                                f"Rate limit hit (429), retrying in {retry_delay:.1f}s "
-                                f"(attempt {attempt + 1}/"
-                                f"{self.config.max_rate_limit_retries})"
-                            )
-                            await asyncio.sleep(retry_delay)
-                            # Will retry in next iteration
-                            last_error = RateLimitError(
-                                f"Rate limit exceeded: {error_text}",
-                                status_code=429,
-                                response_text=error_text,
-                            )
-                            continue
-
-                        if response.status != 200:
-                            error_text = await response.text()
-                            raise APIError(
-                                f"API request failed: {error_text}",
-                                status_code=response.status,
-                                response_text=error_text,
-                            )
-
-                        result: Dict[str, Any] = await response.json()
-                        return result
-
-            except asyncio.TimeoutError as e:
-                raise TimeoutError(
-                    f"Request timed out after {self.config.timeout} seconds"
-                ) from e
-
-        # If we exhausted all retries due to rate limiting, raise the error
-        if last_error:
-            raise last_error
-        # This should never happen, but just in case
-        raise RateLimitError("Rate limit retries exhausted", status_code=429)
-
-    def _make_api_request_sync(self, image_b64: str, prompt: str) -> Dict[str, Any]:
-        """
-        Make synchronous API request to DeepSeek OCR with rate limiting and retry.
-
-        Args:
-            image_b64: Base64-encoded image.
-            prompt: Prompt for OCR processing.
-
-        Returns:
-            API response as dictionary.
-
-        Raises:
-            APIError: If API returns an error.
-            RateLimitError: If rate limit is exceeded and retries exhausted.
-            TimeoutError: If request times out.
-        """
-        headers = {
-            "Authorization": f"Bearer {self.config.api_key}",
-            "Content-Type": "application/json",
-        }
-
-        payload = {
-            "model": self.config.model_name,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/png;base64,{image_b64}"},
-                        },
-                        {"type": "text", "text": prompt},
-                    ],
-                }
-            ],
-            "temperature": self.config.temperature,
-            "max_tokens": self.config.max_tokens,
-        }
-
-        # Retry logic for rate limiting
-        for attempt in range(self.config.max_rate_limit_retries + 1):
-            try:
-                # Apply rate limiting delay (updates _last_request_time atomically)
-                self._apply_rate_limit_sync()
-
-                response = requests.post(
-                    self.config.base_url,
-                    headers=headers,
-                    json=payload,
-                    timeout=self.config.timeout,
-                )
-
-                # Handle rate limiting (429)
-                if response.status_code == 429:
-                    if (
-                        not self.config.enable_rate_limit_retry
-                        or attempt >= self.config.max_rate_limit_retries
-                    ):
-                        raise RateLimitError(
-                            f"Rate limit exceeded: {response.text}",
-                            status_code=429,
-                            response_text=response.text,
-                        )
-
-                    # Exponential backoff: delay * (2 ^ attempt)
-                    retry_delay = self.config.rate_limit_retry_delay * (2**attempt)
-                    logger.warning(
-                        f"Rate limit hit (429), retrying in {retry_delay:.1f}s "
-                        f"(attempt {attempt + 1}/{self.config.max_rate_limit_retries})"
-                    )
-                    time.sleep(retry_delay)
-                    continue
-
-                if response.status_code != 200:
-                    raise APIError(
-                        f"API request failed: {response.text}",
-                        status_code=response.status_code,
-                        response_text=response.text,
-                    )
-
-                result: Dict[str, Any] = response.json()
-                return result
-
-            except requests.Timeout as e:
-                raise TimeoutError(
-                    f"Request timed out after {self.config.timeout} seconds"
-                ) from e
-
-        # Should not reach here, but just in case
-        raise RateLimitError("Rate limit retries exhausted", status_code=429)
 
     async def parse_async(
         self,
@@ -590,6 +211,8 @@ class DeepSeekOCR:
             ...     pages=[1, 3, 5]
             ... )
         """
+        import asyncio
+
         # Convert mode string to enum if needed
         if isinstance(mode, str):
             mode = OCRMode(mode)
@@ -598,9 +221,9 @@ class DeepSeekOCR:
         if dpi is None:
             dpi = self.config.dpi
 
-        # Convert PDF to base64
+        # Convert PDF to base64 using shared utility
         logger.info(f"Processing {file_path} with mode={mode} and dpi={dpi}")
-        image_b64_result = self._pdf_to_base64(file_path, dpi, pages)
+        image_b64_result = FileProcessor.pdf_to_base64(file_path, dpi, pages)
 
         # Build prompt
         prompt = self._build_prompt(mode)
@@ -617,8 +240,37 @@ class DeepSeekOCR:
         async def process_page(page_idx: int, image_b64: str) -> str:
             logger.debug(f"Processing page {page_idx + 1}/{len(images)}")
 
-            # Make API request
-            result = await self._make_api_request_async(image_b64, prompt)
+            # Prepare request payload
+            payload = {
+                "model": self.config.model_name,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                            },
+                            {"type": "text", "text": prompt},
+                        ],
+                    }
+                ],
+                "temperature": self.config.temperature,
+                "max_tokens": self.config.max_tokens,
+            }
+
+            headers = {
+                "Authorization": f"Bearer {self.config.api_key}",
+                "Content-Type": "application/json",
+            }
+
+            # Make API request using shared requester
+            result = await self._api_requester.request_async(
+                self.config.base_url,
+                headers,
+                payload,
+                enable_rate_limit_retry=self.config.enable_rate_limit_retry,
+            )
 
             # Extract text from response
             if "choices" not in result or len(result["choices"]) == 0:
@@ -654,8 +306,29 @@ class DeepSeekOCR:
                     fallback_prompt = self._build_prompt(
                         OCRMode(self.config.fallback_mode)
                     )
-                    fallback_result = await self._make_api_request_async(
-                        image_b64, fallback_prompt
+                    fallback_payload = {
+                        "model": self.config.model_name,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                                    },
+                                    {"type": "text", "text": fallback_prompt},
+                                ],
+                            }
+                        ],
+                        "temperature": self.config.temperature,
+                        "max_tokens": self.config.max_tokens,
+                    }
+
+                    fallback_result = await self._api_requester.request_async(
+                        self.config.base_url,
+                        headers,
+                        fallback_payload,
+                        enable_rate_limit_retry=self.config.enable_rate_limit_retry,
                     )
 
                     if (
@@ -772,9 +445,9 @@ class DeepSeekOCR:
         if dpi is None:
             dpi = self.config.dpi
 
-        # Convert PDF to base64
+        # Convert PDF to base64 using shared utility
         logger.info(f"Processing {file_path} with mode={mode} and dpi={dpi}")
-        image_b64_result = self._pdf_to_base64(file_path, dpi, pages)
+        image_b64_result = FileProcessor.pdf_to_base64(file_path, dpi, pages)
 
         # Build prompt
         prompt = self._build_prompt(mode)
@@ -792,8 +465,37 @@ class DeepSeekOCR:
         for page_idx, image_b64 in enumerate(images):
             logger.debug(f"Processing page {page_idx + 1}/{len(images)}")
 
-            # Make API request
-            result = self._make_api_request_sync(image_b64, prompt)
+            # Prepare request payload
+            payload = {
+                "model": self.config.model_name,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                            },
+                            {"type": "text", "text": prompt},
+                        ],
+                    }
+                ],
+                "temperature": self.config.temperature,
+                "max_tokens": self.config.max_tokens,
+            }
+
+            headers = {
+                "Authorization": f"Bearer {self.config.api_key}",
+                "Content-Type": "application/json",
+            }
+
+            # Make API request using shared requester
+            result = self._api_requester.request_sync(
+                self.config.base_url,
+                headers,
+                payload,
+                enable_rate_limit_retry=self.config.enable_rate_limit_retry,
+            )
 
             # Extract text from response
             if "choices" not in result or len(result["choices"]) == 0:
@@ -829,8 +531,29 @@ class DeepSeekOCR:
                     fallback_prompt = self._build_prompt(
                         OCRMode(self.config.fallback_mode)
                     )
-                    fallback_result = self._make_api_request_sync(
-                        image_b64, fallback_prompt
+                    fallback_payload = {
+                        "model": self.config.model_name,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                                    },
+                                    {"type": "text", "text": fallback_prompt},
+                                ],
+                            }
+                        ],
+                        "temperature": self.config.temperature,
+                        "max_tokens": self.config.max_tokens,
+                    }
+
+                    fallback_result = self._api_requester.request_sync(
+                        self.config.base_url,
+                        headers,
+                        fallback_payload,
+                        enable_rate_limit_retry=self.config.enable_rate_limit_retry,
                     )
 
                     if (
