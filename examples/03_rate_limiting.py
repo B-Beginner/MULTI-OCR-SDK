@@ -3,13 +3,12 @@ Example 3: Rate Limiting and 429 Error Handling
 
 This example demonstrates how to use the rate limiting features
 to prevent hitting API limits and handle 429 errors gracefully.
+
+Note: BatchProcessor and async features have been removed in this version.
 """
 
-import asyncio
 import os
-from pathlib import Path
-
-from core import DeepSeekOCR, BatchProcessor, RateLimitError
+from multi_ocr_sdk import DeepSeekOCR, RateLimitError
 
 # Set your API key
 API_KEY = os.getenv("DS_OCR_API_KEY", "your_api_key_here")
@@ -101,15 +100,14 @@ def example_combined_rate_limiting():
             print(f"✗ Error: {e}")
 
 
-async def example_batch_with_rate_limiting():
-    """Batch processing with rate limiting."""
-    print("\n\nExample 4: Batch Processing with Rate Limiting")
+def example_batch_with_rate_limiting():
+    """Simple sequential processing with rate limiting."""
+    print("\n\nExample 4: Sequential Processing with Rate Limiting")
     print("=" * 60)
 
     # For L0 tier (TPM: 80,000, RPM: 1,000):
     # - Average 1000 tokens per request → ~80 requests/minute max
     # - Safe rate: 60 requests/minute → 1 second delay
-    # - With global rate limiting, request_delay enforces minimum time between ALL requests
     # - With request_delay=2.0, max rate is 0.5 requests/second = 30 requests/minute
 
     client = DeepSeekOCR(
@@ -118,27 +116,21 @@ async def example_batch_with_rate_limiting():
         enable_rate_limit_retry=True,
     )
 
-    processor = BatchProcessor(
-        client,
-        max_concurrent=3,  # Process 3 files concurrently
-    )
-
-    files = list(Path("sample_docs").glob("*.pdf"))[:5]  # First 5 files
-    print(f"Processing {len(files)} files with 3 concurrent workers")
-    print("Request delay: 2 seconds (global rate limit)")
-    print("Effective rate: ~0.5 requests/second (1 request every 2 seconds)")
-
-    try:
-        summary = await processor.process_batch(
-            files,
-            mode="free_ocr",
-            show_progress=True,
-        )
-
-        summary.print_summary()
-
-    except Exception as e:
-        print(f"Batch processing error: {e}")
+    print("Processing files sequentially with rate limiting")
+    print("Request delay: 2 seconds between requests")
+    
+    # Note: BatchProcessor has been removed. Users should implement their own
+    # concurrent processing if needed.
+    
+    files = ["sample_docs/doc1.pdf", "sample_docs/doc2.pdf", "sample_docs/doc3.pdf"]
+    
+    for i, file in enumerate(files, 1):
+        print(f"\nProcessing file {i}/{len(files)}: {file}")
+        try:
+            text = client.parse(file)
+            print(f"✓ Success: {len(text)} characters extracted")
+        except Exception as e:
+            print(f"✗ Error: {e}")
 
 
 def example_tpm_rpm_calculation():
@@ -170,10 +162,9 @@ For L0 tier (TPM: 80,000, RPM: 1,000):
   - Safe rate: 60 requests/minute (75% of limit)
   - request_delay = 60s / 60 = 1.0 second
 
-For L0 with batch processing (max_concurrent=5):
-  - 5 concurrent requests every 2 seconds = 150 requests/minute
-  - To stay under 60 requests/minute: request_delay = 5.0 seconds
-  - Or reduce concurrent workers: max_concurrent=2, request_delay=2.0
+For L0 with sequential processing:
+  - To stay under 60 requests/minute: request_delay = 1.0 second
+  - For more conservative rate: request_delay = 2.0 seconds (30 req/min)
 
 For L3 tier (TPM: 320,000, RPM: 4,000):
   Assume average 1000 tokens per request:
@@ -187,17 +178,14 @@ For L3 tier (TPM: 320,000, RPM: 4,000):
     configs = {
         "L0 (conservative)": {
             "request_delay": 1.0,
-            "max_concurrent": 1,
             "requests_per_minute": 60,
         },
         "L0 (moderate)": {
             "request_delay": 2.0,
-            "max_concurrent": 3,
-            "requests_per_minute": 45,
+            "requests_per_minute": 30,
         },
         "L3 (conservative)": {
             "request_delay": 0.25,
-            "max_concurrent": 5,
             "requests_per_minute": 240,
         },
     }
@@ -206,9 +194,6 @@ For L3 tier (TPM: 320,000, RPM: 4,000):
     for name, config in configs.items():
         print(f"\n{name}:")
         print(f"  client = DeepSeekOCR(request_delay={config['request_delay']})")
-        print(
-            f"  processor = BatchProcessor(client, max_concurrent={config['max_concurrent']})"
-        )
         print(f"  Effective rate: ~{config['requests_per_minute']} requests/minute")
 
 
@@ -244,8 +229,8 @@ if __name__ == "__main__":
     example_429_retry()
     example_combined_rate_limiting()
 
-    # Run async example
-    asyncio.run(example_batch_with_rate_limiting())
+    # Run sequential processing example
+    example_batch_with_rate_limiting()
 
     # Display calculation guide
     example_tpm_rpm_calculation()
@@ -260,7 +245,7 @@ if __name__ == "__main__":
 Summary of best practices:
 1. Set request_delay based on your API tier and token usage
 2. Enable auto-retry to handle occasional 429 errors
-3. For batch processing, adjust max_concurrent to stay within limits
+3. For concurrent processing, implement your own async wrapper
 4. Monitor your usage and adjust settings as needed
 """
     )

@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from .basic_utils.base_config import BaseConfig
 from .exceptions import ConfigurationError

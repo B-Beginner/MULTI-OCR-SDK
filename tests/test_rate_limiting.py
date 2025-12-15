@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from core import DeepSeekOCR
+from multi_ocr_sdk import DeepSeekOCR
 from multi_ocr_sdk.exceptions import RateLimitError
 
 

@@ -1,6 +1,6 @@
 """Tests for exceptions module."""
 
-from core import (
+from multi_ocr_sdk import (
     APIError,
     ConfigurationError,
     DeepSeekOCRError,

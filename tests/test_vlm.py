@@ -4,7 +4,7 @@
 
 import pytest
 
-from core import VLMClient, vlm_client
+from multi_ocr_sdk import VLMClient, vlm_client
 
 
 def test_vlm_import_and_structure():

@@ -2,7 +2,7 @@
 
 import pytest
 
-from core import DeepSeekOCR, OCRConfig
+from multi_ocr_sdk import DeepSeekOCR, OCRConfig
 
 
 @pytest.fixture

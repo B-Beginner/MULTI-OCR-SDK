@@ -11,7 +11,7 @@ from pprint import pprint
 # Install via pip (if not installed locally):
 # pip install multi-ocr-sdk
 
-from core import VLMClient
+from multi_ocr_sdk import VLMClient
 
 API_KEY = os.getenv("VLM_API_KEY", "123454")
 BASE_URL = os.getenv("VLM_BASE_URL", "http://localhost:8000/v1")

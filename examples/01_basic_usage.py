@@ -5,7 +5,7 @@ This example demonstrates the basic usage of DeepSeek OCR SDK.
 """
 
 import os
-from core import DeepSeekOCR
+from multi_ocr_sdk import DeepSeekOCR
 
 # Set your API key (or use DS_OCR_API_KEY environment variable)
 API_KEY = os.getenv("DS_OCR_API_KEY", "your_api_key_here")
@@ -57,26 +57,10 @@ def main():
         print(f"Error: {e}\n")
 
 
-async def async_example():
-    """Async OCR example."""
-    client = DeepSeekOCR(api_key=API_KEY)
-
-    print("Async Example: Processing document asynchronously...")
-    try:
-        text = await client.parse_async(
-            "sample_docs/simple_document.pdf",
-            mode="free_ocr",
-        )
-        print(f"Extracted text ({len(text)} chars):")
-        print(text[:500])
-    except Exception as e:
-        print(f"Error: {e}")
-
 
 if __name__ == "__main__":
     # Run synchronous examples
     main()
-
-    # Uncomment to run async example
-    # import asyncio
-    # asyncio.run(async_example())
+    
+    # Note: Async features have been removed in this version.
+    # Users should implement their own async wrappers if needed.
