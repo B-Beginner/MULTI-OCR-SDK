@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from .config import OCRConfig
 from .enums import OCRMode
-from .exceptions import APIError, FileProcessingError
+from .exceptions import APIError
 from .basic_utils import FileProcessor, RateLimiter, APIRequester
 
 logger = logging.getLogger(__name__)
