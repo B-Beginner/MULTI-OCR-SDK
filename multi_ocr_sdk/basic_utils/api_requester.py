@@ -55,7 +55,6 @@ class APIRequester:
             RateLimitError: If rate limit is exceeded and retries exhausted.
             TimeoutError: If request times out.
         """
-        last_error = None
 
         for attempt in range(self.rate_limiter.max_retries + 1):
             try:
