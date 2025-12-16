@@ -31,7 +31,7 @@ else:
             prompt="你是一个ocr机器人，识别输入的文件内容，输出为markdown格式，尽可能保留图表等格式信息，你不需要评论概括文件内容，只需要输出就行",
             model="Qwen3-VL-8B",
             timeout=100,
-            dpi=30  # Standard screen DPI is usually sufficient for VLM
+            dpi=72  # Use at least 72 DPI for reasonable OCR quality (as suggested above)
         )
 
         print("\n--- Result ---")
