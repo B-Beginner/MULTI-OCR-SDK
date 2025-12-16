@@ -33,7 +33,7 @@ pip install -e . # 或使用 pip 安装
 
 ## 基础用法
 
-```
+```python
 import os
 from pprint import pprint
 from multi_ocr_sdk import VLMClient
@@ -56,8 +56,7 @@ result = client.parse(
 )
 print(result)
 ```
-## 进阶方法
-还没写
+
 # DeepSeek-OCR使用方法
 ### 核心特性
 - **三种 OCR 模式**：
