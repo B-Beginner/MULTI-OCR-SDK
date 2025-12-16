@@ -2,8 +2,6 @@
 不太懂pytest怎么用，先让ai写了个，大佬完善一下
 """
 
-import pytest
-
 from multi_ocr_sdk import VLMClient, vlm_client
 
 
