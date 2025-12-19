@@ -26,11 +26,9 @@ kw_only=True 是一个 python3.10 及以上版本 dataclass 的参数
 """
 @dataclass(kw_only=True)
 class VLMConfig(BaseConfig):
-    """VLM-specific configuration that reuses common fields/validation from BaseConfig."""
     # VLM 特有的字段；常见字段（如 api_key、base_url、timeout 等）由 BaseConfig 提供并校验
     model: str
     timeout: int = 60
-    max_tokens: int = 8000 #一般的模型最大传入token为8192，此处设置为8000
     temperature: float = 0.0 # 温度越小，幻觉越少，OCR场景的温度设置为0
     request_delay: float = 0.0 # 两次请求之间的间隔，如果达到了访问上限，这个值可以调高一些
     enable_rate_limit_retry: bool = True # 如果遇到429报错（限流）是否重试
@@ -40,10 +38,6 @@ class VLMConfig(BaseConfig):
 
     @classmethod
     def from_env(cls, **overrides: Any) -> "VLMConfig":
-        """
-        Create configuration from environment variables and optional overrides.
-        Uses BaseConfig._get_env helper to read and convert environment values.
-        """
         get_env = BaseConfig._get_env
 
         env_config = {
@@ -69,7 +63,6 @@ class VLMConfig(BaseConfig):
         return cls(**env_config)
 
     def __post_init__(self) -> None:
-        """Validate configuration and perform VLM-specific normalization."""
         # 使用 BaseConfig 提供的通用校验
         super().__post_init__()
 
