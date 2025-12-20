@@ -260,7 +260,8 @@ class VLMClient:
                         logger.exception(
                             f"Error processing page {idx + 1}; this page will be represented as empty text in the final output: {e}"
                         )
-                        all_texts[idx] = ""  # 或者抛出异常
+                        # 出错时，该页在最终结果中表示为空文本
+                        all_texts[idx] = ""
         else:
 
             # 如果不用并发，顺序处理每一页
