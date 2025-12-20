@@ -34,7 +34,7 @@ else:
             timeout=100,
             dpi=60,  # dpi建议60-80。dpi越高识别效果越好，但也越容易超出模型的token限制
             concurrency_num=5,  # 并发处理一个pdf里的5个页面
-            max_tokens=8000  #每个模型支持的最大token数不同，不要设为模型上限，因为 prompt 也占 token；如果模型上限是8192，建议max_token略小一些，留出冗余给文字prompt，比如此处设为8000
+            max_tokens=8000  # 每个模型支持的最大token数不同，不要设为模型上限，因为 prompt 也占 token；如果模型上限是8192，建议max_token略小一些，留出冗余给文字prompt，比如此处设为8000
         )
 
         print("\n--- Result ---")
