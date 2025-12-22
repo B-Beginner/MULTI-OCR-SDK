@@ -36,8 +36,8 @@ def setup_file_logger(
     sdk_logger.setLevel(level)
     
 	# 确保只添加一个文件处理程序，如果已经添加过文件处理程序，则跳过
-    # 找出并删除所有名为 "multi_ocr_file_handler" 的既往的handler，防止旧的handler把日志写入新的log文件
-    to_remove = [h for h in list(sdk_logger.handlers) if getattr(h, "name", "") == "multi_ocr_file_handler"]
+    # 找出并删除所有名为 "multi_ocr_sdk_file_handler" 的既往的handler，防止旧的handler把日志写入新的log文件
+    to_remove = [h for h in list(sdk_logger.handlers) if getattr(h, "name", "") == "multi_ocr_sdk_file_handler"]
 
     for existing_handler in to_remove:
         try:
@@ -53,7 +53,7 @@ def setup_file_logger(
     fh.setFormatter(
         logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
     )
-    fh.name = "multi_ocr_file_handler"
+    fh.name = "multi_ocr_sdk_file_handler"
     sdk_logger.addHandler(fh)
 
     return log_file
