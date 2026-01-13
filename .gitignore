@@ -56,16 +56,11 @@ develop_test/
 docs/_build/
 
 # Project specific
-*.pdf
-*.png
-*.jpg
-*.jpeg
-examples/sample_docs/*.pdf
-examples/sample_docs/*.png
-examples/sample_docs/*.jpg
-!examples/sample_docs/README.md
 CLAUDE.md
 
 # logs
 multi-ocr-sdk-logs/
 logs/
+
+# others
+uv.lock
