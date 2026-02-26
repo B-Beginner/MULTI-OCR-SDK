@@ -24,6 +24,6 @@ MODEL_NAME='deepseek-ocr'
 
 
 
-text = client.parse(r"examples/example_files/DeepSeek_OCR_paper.pdf")
+text = client.parse("examples/example_files/DeepSeek_OCR_paper.pdf")
 
 print(text)
