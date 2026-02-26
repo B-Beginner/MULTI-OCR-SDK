@@ -38,7 +38,33 @@ cd MULTI-OCR-SDK
 uv sync # 使用 uv 安装
 pip install -e . # 或使用 pip 安装
 ```
+# paddleocr-vl使用方法
+## 基础用法
+```python
+import json
 
+from multi_ocr_sdk import PaddleOCRVLClient
+
+
+base_url = "http://10.131.101.39:8010"
+api_key = "test"
+
+# 默认模式：仅返回识别出的文字markdown
+client = PaddleOCRVLClient(base_url=base_url, api_key=api_key)
+markdown_text = client.parse(r"examples/example_files/DeepSeek_OCR_paper_page1.jpg")
+print(markdown_text)
+
+# # 富结果模式：返回 Markdown + 每页版面定位信息（边界框坐标）
+# rich_client = PaddleOCRVLClient(
+#     base_url=base_url,
+#     api_key=api_key,
+#     return_layout_info=True,
+# )
+# result = rich_client.parse(r"examples/example_files/DeepSeek_OCR_paper_page1.jpg")
+# result_dict = result.to_dict()
+# print(json.dumps(result_dict, ensure_ascii=False, indent=2))
+
+```
 # 视觉模型VLM使用方法
 
 ## 基础用法
