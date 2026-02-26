@@ -30,6 +30,8 @@ from .exceptions import (
 )
 from . import vlm_client
 from .vlm_client import VLMClient
+from . import paddleocr_vl_client
+from .paddleocr_vl_client import PaddleOCRVLClient, PaddleOCRVLConfig, PaddleOCRVLResult, PageLayoutInfo
 
 __version__ = "0.1.0"
 __author__ = "Chengjie"
@@ -45,6 +47,12 @@ __all__ = [
     # VLM support
     "vlm_client",
     "VLMClient",
+    # PaddleOCR-VL support
+    "paddleocr_vl_client",
+    "PaddleOCRVLClient",
+    "PaddleOCRVLConfig",
+    "PaddleOCRVLResult",
+    "PageLayoutInfo",
     # Exceptions
     "DeepSeekOCRError",
     "ConfigurationError",
