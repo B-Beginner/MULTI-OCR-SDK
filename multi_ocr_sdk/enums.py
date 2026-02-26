@@ -43,8 +43,8 @@ class OCRMode(Enum):
         """
         prompts = {
             OCRMode.FREE_OCR: "Free OCR.",
-            OCRMode.GROUNDING: "<|grounding|>Convert the document to markdown.",
-            OCRMode.OCR_IMAGE: "<|grounding|>OCR this image.",
+            OCRMode.GROUNDING: "<image>\n<|grounding|>Convert the document to markdown.",
+            OCRMode.OCR_IMAGE: "<image>\n<|grounding|>OCR this image.",
         }
         return prompts[self]
 
